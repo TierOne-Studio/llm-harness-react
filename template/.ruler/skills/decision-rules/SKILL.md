@@ -102,7 +102,7 @@ CLAUDE.md carries the highest-impact decisions as one-liners. This skill carries
 
 ### 11. Repo conventions vs requested approach
 
-**Situation:** User asks you to do X but X violates a `repo-conventions` rule (e.g., "store this token in localStorage" when the convention is to use the existing better-auth token storage, or "throw a generic `Error`" when the convention is to surface via a typed error / toast / error boundary).
+**Situation:** User asks you to do X but X violates a `repo-conventions` rule (e.g., "store this token in a new place" when the project already has a documented token-storage approach, or "throw a generic `Error`" when the convention is to surface via a typed error / toast / error boundary).
 **Default:** State the conflict. Ask: "<repo-conventions rule>; want me to deviate explicitly, or follow the convention?"
 **Rationale:** The user may have a reason; they may have forgotten; the question is cheap.
 

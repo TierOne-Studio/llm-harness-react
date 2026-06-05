@@ -75,7 +75,7 @@ if (failed.length > 0) console.warn('partial source failure', { failedCount: fai
 return ok
 ```
 
-This pattern fits the chat agent in this repo: each data source is independent; one timeout shouldn't blank the response.
+This pattern fits any fan-out over independent sources (e.g. firing several API calls in parallel to build one view): one slow or failing source shouldn't blank the whole result.
 
 ## Try/catch placement: at the boundary
 
@@ -158,7 +158,7 @@ Browsers crash with an `unhandledrejection` event by default. **Don't add a glob
 5. **`Promise.all` when partial-success is acceptable.** Use `Promise.allSettled`.
 6. **Custom timeout via `Promise.race`.** Use `AbortSignal.timeout()`.
 7. **Catching to log then re-throw.** The boundary handles it. The catch does nothing.
-8. **Adding retries.** TanStack Query has its own; don't roll your own around it.
+8. **Adding retries.** If your data-fetching layer has built-in retries (e.g. TanStack Query), don't roll your own around it.
 9. **Async functions returning `Promise<void>` and the caller not awaiting** — fire-and-forget. The error vanishes.
 10. **`async` keyword on a function that has no `await`.** Wraps the return value in a Promise needlessly. Drop the keyword.
 11. **Not propagating the `signal` from TanStack Query to the underlying fetch.** Cancellation never cascades; users navigate away but the request keeps running.

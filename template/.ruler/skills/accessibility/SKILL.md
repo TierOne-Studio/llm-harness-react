@@ -13,7 +13,7 @@ A11y regressions are the easiest defects to ship — they don't fail unit tests,
 - Adding a dialog, menu, popover, drawer, sheet, command palette.
 - Adding a form (pair with `react-forms`).
 - Adding a keyboard shortcut.
-- Reviewing a custom component built outside the Radix primitives in `src/shared/components/ui/`.
+- Reviewing a custom component built outside your project's shared UI primitives (e.g. a Radix-based `components/ui/` directory).
 
 ## Hard rules
 
@@ -33,13 +33,13 @@ A11y regressions are the easiest defects to ship — they don't fail unit tests,
 
 6. **Color is not the only signal.** A red border + an error message text. A check icon + a "Saved" text. A focus ring + the focused state.
 
-7. **Contrast.** Text against background must meet WCAG AA (4.5:1 for body, 3:1 for large/UI). Tailwind tokens in this repo have been picked to comply — don't override into low-contrast combinations.
+7. **Contrast.** Text against background must meet WCAG AA (4.5:1 for body, 3:1 for large/UI). Pick your color/Tailwind tokens to comply, and don't override into low-contrast combinations.
 
 ## Patterns to use
 
 ### Use Radix primitives
 
-`@radix-ui/react-dialog`, `<DropdownMenu>`, `<Tabs>`, `<Tooltip>`, `<Select>`, `<AlertDialog>` etc. ship with correct keyboard, focus trap, ARIA, and screen-reader announcement out of the box. Wrapping them in our own `src/shared/components/ui/` adds styling but inherits the a11y. **Don't roll your own dialog or menu.**
+`@radix-ui/react-dialog`, `<DropdownMenu>`, `<Tabs>`, `<Tooltip>`, `<Select>`, `<AlertDialog>` etc. ship with correct keyboard, focus trap, ARIA, and screen-reader announcement out of the box. Wrapping them in a shared `components/ui/` layer adds styling but inherits the a11y. **Don't roll your own dialog or menu.**
 
 ### Visually-hidden text for icon-only controls
 
@@ -52,7 +52,7 @@ A11y regressions are the easiest defects to ship — they don't fail unit tests,
 
 ### Live regions for async updates
 
-For toasts, error banners, or status messages that appear without focus moving, use `role="status"` (polite) or `role="alert"` (assertive). Sonner already does this correctly.
+For toasts, error banners, or status messages that appear without focus moving, use `role="status"` (polite) or `role="alert"` (assertive). Most mature toast libraries (e.g. Sonner) do this correctly.
 
 ### Skip-to-main-content
 

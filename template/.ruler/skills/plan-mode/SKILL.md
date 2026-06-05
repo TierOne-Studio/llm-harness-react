@@ -60,7 +60,7 @@ Before writing the per-step plan, sketch what depends on what. The dependency gr
 ```
 Schema / type / API contract (server-side, or zod schema)
     │
-    ├── Service / API client (axios, better-auth client, or a thin wrapper)
+    ├── Service / API client (e.g. a fetch/axios wrapper or your auth library's client)
     │       │
     │       └── Server-state hook (TanStack Query useQuery / useMutation)
     │               │

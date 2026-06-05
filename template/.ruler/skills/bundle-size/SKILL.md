@@ -42,7 +42,7 @@ ES static imports are the fastest path and benefit fully from tree-shaking. Defa
 ### Dynamic imports for route/feature splits
 
 ```ts
-const ChartsPage = lazy(() => import('@/features/Charts/views/ChartsPage'))
+const ChartsPage = lazy(() => import('./features/charts/ChartsPage'))
 ```
 
 The dynamic import becomes its own chunk; Vite outputs it under `dist/assets/<hash>.js`.
@@ -79,8 +79,8 @@ Production deploy should serve `.js` and `.css` with Brotli (or Gzip fallback). 
 - **Including a polyfill "just in case."** Decision based on actual browser-support targets in `browserslist`/`vite.config.ts`, not vibes.
 - **Bundling test fixtures into the production build.** Vite excludes test files by default; don't break the convention.
 - **Shipping source maps to production without intent.** Useful for error tracking; costly if not.
-- **Re-importing a feature's whole barrel for one symbol.** `import { Project } from '@/features/Projects'` may pull the entire feature tree if the index re-exports broadly.
-- **Adding a UI library when 3 components from Radix would do.** This repo standardizes on Radix primitives + Tailwind; a competing UI library duplicates 100KB+.
+- **Re-importing a feature's whole barrel for one symbol.** `import { Thing } from './features/things'` may pull the entire feature tree if the index re-exports broadly.
+- **Adding a UI library when 3 components from an existing primitive set would do.** If your project already standardizes on a primitive set (e.g. Radix primitives + Tailwind), a competing UI library duplicates 100KB+.
 
 ## Audit checklist for a new dependency
 
@@ -101,4 +101,4 @@ Production deploy should serve `.js` and `.css` with Brotli (or Gzip fallback). 
 - `vite` — Vite-config knobs for chunk strategy.
 - `react-routing` — code splitting per route.
 - `frontend-security` — dep audit, supply-chain.
-- `ADR-009` — asks-first dependency gate (every new `dependencies` entry requires explicit user approval, with reason / bundle cost / alternatives / license / maintenance signal).
+- asks-first dependency gate — every new runtime `dependencies` entry should require explicit user approval, with reason / bundle cost / alternatives / license / maintenance signal (see your project's dependency policy / `repo-conventions`).

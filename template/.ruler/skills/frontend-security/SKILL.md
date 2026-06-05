@@ -1,32 +1,32 @@
 ---
 name: frontend-security
-description: Use when reviewing or implementing anything on the SPA's security surface — XSS sinks (`dangerouslySetInnerHTML`, raw `react-markdown`, third-party HTML), token storage, env-var leakage (`VITE_*`), CSP, dependency audit, postMessage origin checks, URL parameter handling that affects auth state, file upload/download flows, and OAuth/redirect flows. Force-fire on diffs touching auth, tokens, user-supplied HTML, or env vars per CLAUDE.md P4. NOT for pure visual styling changes with no DOM-injection or auth surface, pure data-shape refactors that don't cross a trust boundary, or backend-only audits (those belong on the api-velocity side).
+description: Use when reviewing or implementing anything on a React SPA's security surface — XSS sinks (`dangerouslySetInnerHTML`, raw `react-markdown`, third-party HTML), token storage, env-var leakage (`VITE_*`), CSP, dependency audit, postMessage origin checks, URL parameter handling that affects auth state, file upload/download flows, and OAuth/redirect flows. Force-fire on diffs touching auth, tokens, user-supplied HTML, or env vars. NOT for pure visual styling changes with no DOM-injection or auth surface, pure data-shape refactors that don't cross a trust boundary, or backend-only audits.
 ---
 
 # Frontend Security
 
-A SPA's attack surface is small but unforgiving. The big risks are XSS (any user-supplied HTML can pwn the session if dangerously rendered), token leakage (every `VITE_*` is shipped to every browser), and weakened guards (`<ProtectedRoute>` removed in a refactor). This skill encodes the patterns and the audit checklist.
+A SPA's attack surface is small but unforgiving. The big risks are XSS (any user-supplied HTML can pwn the session if dangerously rendered), token leakage (every `VITE_*` is shipped to every browser), and weakened guards (a route guard such as `<ProtectedRoute>` removed in a refactor). This skill encodes the patterns and the audit checklist.
 
 ## When this fires
 
-- A diff touches auth code, sign-in/up flows, token storage, or `useAuth`.
+- A diff touches auth code, sign-in/up flows, token storage, or an auth hook (e.g. `useAuth`).
 - A diff renders user-supplied content (markdown, HTML, embeds).
 - A diff adds or modifies a `VITE_*` env var.
 - A diff adds an external `<iframe>`, `postMessage` listener, or third-party SDK.
 - A diff weakens or rewrites a route guard.
-- A code review on a PR touching `src/shared/lib/auth-client.ts` or `src/shared/context/AuthContext`.
+- A code review on a PR touching the auth client or auth context.
 
 ## Hard rules
 
 1. **Never put secrets in `VITE_*` vars.** Anything prefixed `VITE_` is bundled into client JS and shipped publicly. Allowed: API base URLs, public anon keys (Supabase, Firebase config), feature flags. Forbidden: API keys, JWT secrets, OAuth client secrets, third-party admin tokens.
 
-2. **Auth token in `localStorage.bearer_token` is the repo's choice (better-auth requires header delivery).** Documented in `ADR-007`. Token rotation, sign-out across tabs, and expiry handling all flow through better-auth's built-in events. Don't introduce a parallel token store.
+2. **Pick a token-storage model deliberately and document it.** A common choice is a bearer token in `localStorage` (e.g. via a library like better-auth) — this trades XSS exposure for cross-origin simplicity. Document YOUR token-storage decision in `repo-conventions` and don't introduce a parallel/competing store. Token rotation, sign-out across tabs, and expiry handling should all flow through one source of truth (your auth library's built-in events).
 
 3. **No raw HTML injection.** `dangerouslySetInnerHTML` is allowed only with an explicit sanitization step (DOMPurify, or `react-markdown` with the default sanitizer plugin). Document the sanitizer choice inline.
 
 4. **Don't log credentials, tokens, or PII.** Console errors visible to the user/devtools must redact these. `JSON.stringify(formData)` with a password field in dev is still a leak in production logs.
 
-5. **Route guards are security boundaries.** A change to `<ProtectedRoute>` or `<AdminRoute>` MUST trigger `security-reviewer`. Removing a guard "because the API enforces it server-side" is correct in spirit but wrong in practice — defense in depth.
+5. **Route guards are security boundaries.** A change to a route guard (e.g. `<ProtectedRoute>` or an RBAC guard) MUST trigger `security-reviewer`. Removing a guard "because the API enforces it server-side" is correct in spirit but wrong in practice — defense in depth.
 
 6. **External iframes / postMessage need origin checks.** A `window.addEventListener('message', ...)` MUST validate `event.origin` against a whitelist. Without that, any page can send your handler messages.
 
@@ -41,7 +41,7 @@ Read the diff with each of these in mind:
 [ ] Any new dangerouslySetInnerHTML? Sanitization step explicit?
 [ ] Any new third-party script tag? Domain trusted? Subresource Integrity?
 [ ] Any change to auth-token read/write paths?
-[ ] Any change to a guard (`<ProtectedRoute>`, `<AdminRoute>`, useAuth gates)?
+[ ] Any change to a route guard (e.g. `<ProtectedRoute>`, an RBAC guard, auth-hook gates)?
 [ ] Any postMessage listener? Origin check present?
 [ ] Any URL parameter that affects session state (e.g., `?org=...` switching org without re-auth)?
 [ ] Any console.log of an object that contains a token, password, or PII?
@@ -53,11 +53,11 @@ Read the diff with each of these in mind:
 
 ### Sanitize markdown via `react-markdown`
 
-`react-markdown` with the default plugin set sanitizes by default. Don't add `rehype-raw` (which allows arbitrary HTML) without an additional `rehype-sanitize` step. If a feature genuinely needs raw HTML rendering (e.g., a docs page authored by trusted internal users), the decision belongs in an ADR.
+`react-markdown` with the default plugin set sanitizes by default. Don't add `rehype-raw` (which allows arbitrary HTML) without an additional `rehype-sanitize` step. If a feature genuinely needs raw HTML rendering (e.g., a docs page authored by trusted internal users), make it a documented, reviewed decision in `repo-conventions`.
 
 ### Token storage
 
-The current model: better-auth client stores the bearer token in `localStorage`. This trades XSS exposure (a stolen token is a session takeover until expiry) for cross-origin compatibility. Mitigations: short token lifetime, refresh on access, server-side audit log on suspicious activity. Don't quietly switch to cookies — that's an architecture change.
+Threat model the tradeoff before choosing. A common model is an auth client (e.g. better-auth) that stores the bearer token in `localStorage`: this trades XSS exposure (a stolen token is a session takeover until expiry) for cross-origin compatibility. The alternative — an `HttpOnly` cookie — removes the XSS read but reintroduces CSRF concerns and same-origin constraints. Whichever you pick, mitigations apply: short token lifetime, refresh on access, server-side audit log on suspicious activity. Record YOUR decision in `repo-conventions` and don't quietly switch storage models — that's an architecture change.
 
 ### Env vars in code
 
@@ -65,7 +65,7 @@ Reference via `import.meta.env.VITE_API_URL`. Default sensibly. Never log the fu
 
 ### CSP
 
-If a CSP is added (it isn't in the SPA today), `unsafe-inline` for scripts is a regression. Vite supports nonced or hashed inline styles via plugins; same for scripts. CSP work is its own change, with an ADR.
+If you add a CSP, `unsafe-inline` for scripts is a regression. Vite supports nonced or hashed inline styles via plugins; same for scripts. CSP work is its own change, and a load-bearing one — document it in `repo-conventions`.
 
 ## Anti-patterns
 
@@ -82,6 +82,5 @@ If a CSP is added (it isn't in the SPA today), `unsafe-inline` for scripts is a 
 
 - `react-routing` — guards as security boundaries.
 - `accessibility` — `target="_blank"` rel attributes (also a UX concern).
-- `repo-conventions` § Auth — better-auth flow, token storage.
-- `decision-rules` § 12 — quick fix on sensitive surface.
-- ADRs in `docs/decisions/` — auth-token storage rationale.
+- `repo-conventions` — your project's auth + route-guard contract, token-storage decision.
+- `decision-rules` — quick fix on sensitive surface.

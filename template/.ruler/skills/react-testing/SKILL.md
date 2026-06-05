@@ -5,7 +5,7 @@ description: Use when writing or reviewing tests for React code in this SPA — 
 
 # React Testing
 
-This SPA uses Vitest + Testing Library for unit/component tests and Playwright for e2e (under `e2e/<module>/`). The project's test discipline is captured by the test-quality rubric in `tdd-workflow` (10 items) plus the layer-selection rules below.
+A common React test stack is Vitest + Testing Library for unit/component tests and Playwright for e2e (often organized per module, e.g. under `e2e/<module>/`). The project's test discipline is captured by the test-quality rubric in `tdd-workflow` (10 items) plus the layer-selection rules below. Check `repo-conventions` for your project's actual test layout and scripts.
 
 ## When this fires
 
@@ -76,9 +76,9 @@ const { result } = renderHook(() => useChat(), {
 })
 ```
 
-### Asserting on toast / sonner
+### Asserting on toast notifications
 
-Sonner renders into a portal; `getByText('Project created')` works after `await screen.findByText(...)`.
+Most toast libraries render into a portal; `getByText('Project created')` works after `await screen.findByText(...)`.
 
 ### Asserting on error states
 
@@ -100,7 +100,7 @@ Use `axe-core` (via `@axe-core/react` or `vitest-axe`) for high-leverage compone
 
 ## E2E pointer
 
-Playwright tests live in `e2e/<module>/` matching the npm scripts (`auth`, `admin`, `rbac`, `chat`, `admin-dashboard`, `dashboard`, `shared`, `api`). Stable selectors (role, label, text) before CSS. No arbitrary sleeps — wait on UI/network state. See `playwright-best-practices` for the full pattern catalog.
+Playwright tests are commonly organized per module (e.g. `e2e/<module>/`) with matching test scripts; check `repo-conventions` for your project's actual module split and script names. Stable selectors (role, label, text) before CSS. No arbitrary sleeps — wait on UI/network state. See `playwright-best-practices` for the full pattern catalog.
 
 ## Cross-references
 
