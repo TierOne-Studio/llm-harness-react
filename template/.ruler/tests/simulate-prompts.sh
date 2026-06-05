@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# simulate-prompts.sh — static skill-trigger simulation for spa-velocity.
+# simulate-prompts.sh — static skill-trigger simulation for the React harness.
 #
 # This is NOT an LLM run. It's a static contract test: for each canonical
 # (prompt, expected_skills) case, assert that every expected skill's
@@ -16,8 +16,9 @@
 
 set -uo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-cd "$PROJECT_DIR"
+# Validate the SHIPPED template tree directly (no `ruler apply` needed).
+RULER_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+INSTRUCTIONS="$RULER_DIR/instructions.md"
 
 PASS=0
 FAIL=0
@@ -28,7 +29,7 @@ STOP_WORDS="the a an this that these those is are was were be been being have ha
 
 skill_description() {
   local name="$1"
-  local f=".claude/skills/$name/SKILL.md"
+  local f="$RULER_DIR/skills/$name/SKILL.md"
   if [ ! -f "$f" ]; then
     echo ""
     return
@@ -97,7 +98,7 @@ run_case() {
 check_workflow_chain_mentions() {
   local case_name="$1" expected_skills_csv="$2"
   local section
-  section=$(awk '/^## WORKFLOW CHAINS/,/^---/' .ruler/instructions.md)
+  section=$(awk '/^## WORKFLOW CHAINS/,/^---/' "$INSTRUCTIONS")
   IFS=',' read -ra arr <<< "$expected_skills_csv"
   for s in "${arr[@]}"; do
     if printf '%s' "$section" | grep -q "$s"; then
@@ -179,7 +180,7 @@ run_case "bug-failing-test" \
 echo
 echo "--- Case: cross-repo feature"
 run_case "cross-repo-feat" \
-  "Add a /users/me endpoint in api-velocity and a useMe() hook in spa-velocity using TanStack Query with caching and optimistic updates" \
+  "Add a /users/me endpoint in the backend repo and a useMe() hook in the frontend repo using TanStack Query with caching and optimistic updates" \
   "cross-repo-workspace,react-data-fetching"
 
 # --- TDD & process ----------------------------------------------------------

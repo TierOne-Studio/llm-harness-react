@@ -52,7 +52,7 @@ ADRs are **append-only**. Don't edit accepted ADRs except to update Status (Acce
 
 **CLAUDE.md MUST NOT reference:**
 
-- ADR numbers (`ADR-001`, `ADR-002`, ...) — those live in `repo-conventions` § "ADR-backed conventions" + `docs/decisions/README.md`.
+- ADR numbers (`ADR-00X`, `ADR-00Y`, ...) — those live in `repo-conventions` § "ADR-backed conventions" + `docs/decisions/README.md`.
 - File paths (`src/...`, `docs/...`, `.claude/skills/...`) — those live in skill/subagent files.
 - Code symbols, decorators, class names, function names (`<RouteGuard>`, `useAuth()`, `<ErrorBoundary>`, etc.) — those live in skills with patterns + examples.
 - Subagent internal step numbers (`code-reviewer Step 5`) — those are subagent implementation detail.
@@ -83,7 +83,7 @@ For a new subagent: add to P4 verification matrix in CLAUDE.md if it's a review 
 
 When a skill or convention enforces an ADR-backed rule, MUST cite the ADR by number, not restate the rationale:
 
-> ✅ "Per `ADR-007`, the auth token lives in `localStorage.bearer_token` because the better-auth flow requires header-based delivery and the session-cookie alternative was rejected for cross-origin reasons."
+> ✅ "Per `ADR-00X`, the auth token lives in `localStorage` because the auth flow requires header-based delivery and the session-cookie alternative was rejected for cross-origin reasons."
 > ❌ "Don't move the auth token. The repo doesn't use cookies because adding cookies would..."
 
 Skill content stays focused on *how to do it correctly today*. The ADR file holds *why this is the rule and what was rejected*.
@@ -108,7 +108,7 @@ Skill content stays focused on *how to do it correctly today*. The ADR file hold
 
 - **Inline rationale in skills.** A skill paragraph longer than ~3 sentences explaining *why* a convention exists is a smell — that content belongs in an ADR.
 - **Editing accepted ADRs.** Append-only. Status-line updates are the only allowed edit.
-- **ADRs for ephemeral decisions.** "Use 4-space indentation" is `.editorconfig`, not an ADR. "We use better-auth with localStorage tokens, not session cookies" is an ADR.
+- **ADRs for ephemeral decisions.** "Use 4-space indentation" is `.editorconfig`, not an ADR. "We store auth tokens in localStorage, not session cookies" is an ADR-worthy decision.
 - **Single-alternative ADRs.** "There was no other option" is rarely true. If you can't name an alternative, you haven't thought hard enough.
 - **Decision-without-context ADRs.** "We use Zustand" is not an ADR — it's a sentence. The Context section is what makes it readable in 12 months.
 

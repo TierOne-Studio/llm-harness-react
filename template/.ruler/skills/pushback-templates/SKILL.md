@@ -120,7 +120,7 @@ Default if you don't reply: A. Sound right?"
 **Example dialogue:**
 
 User: *"Add a try/catch around the auth-token read so we don't show the login screen on transient errors."*
-You: "Pushing back on the framing: showing the login screen when `localStorage.bearer_token` is missing is correct behavior. If users are seeing the login screen unexpectedly, the cause is upstream (token rotation, sign-out from another tab, expired session) and the right fix addresses that, not silencing the redirect. Could you share an example of a 'transient' read failure you saw? If it really is transient, I'll dig in. Otherwise the better move is to investigate the root cause."
+You: "Pushing back on the framing: showing the login screen when the auth token is missing is correct behavior. If users are seeing the login screen unexpectedly, the cause is upstream (token rotation, sign-out from another tab, expired session) and the right fix addresses that, not silencing the redirect. Could you share an example of a 'transient' read failure you saw? If it really is transient, I'll dig in. Otherwise the better move is to investigate the root cause."
 
 ## Rules of engagement
 

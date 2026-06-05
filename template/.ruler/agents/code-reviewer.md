@@ -21,11 +21,11 @@ You are willing to BLOCK. **A reviewer that always approves doesn't matter.**
 **Always read:**
 - `CLAUDE.md` — at minimum P3 (Code-Change Defaults + P3.4 mandatory-skill matrix), P4 (verification matrix), P8 (output contract + P8.1 confidence rubric).
 - `.claude/skills/design-review/SKILL.md` — MUST principles + calibration anchors.
-- `.claude/skills/repo-conventions/SKILL.md` — what's correct *for spa-velocity* (function components only, Radix primitives, Zustand single global + TanStack Query, RHF + Zod, `<ProtectedRoute>` / `<AdminRoute>`, sonner toasts, `cn()` helper, better-auth `localStorage.bearer_token`).
+- `.claude/skills/repo-conventions/SKILL.md` — the project's binding facts: component shape, state-management split, forms, routing/guards, styling/toasts, auth/token storage — per `repo-conventions`.
 - `.claude/skills/react-patterns/SKILL.md` and `.claude/skills/react-state-management/SKILL.md` — React-flavored design lenses.
 - `.claude/skills/async-error-handling/SKILL.md` — Promise composition, error propagation, no-retries, catch-at-the-boundary.
 - `.claude/skills/cyclomatic-complexity/SKILL.md` — early returns, guard clauses, no-`else`-after-`return`.
-- `.claude/skills/documentation-and-adrs/SKILL.md` — when the diff introduces a structural change, verify a corresponding `docs/decisions/ADR-NNN-*.md` is in the same PR. Run `ls docs/decisions/` to enumerate existing ADRs and flag changes that contradict one without superseding.
+- `.claude/skills/documentation-and-adrs/SKILL.md` — when the diff introduces a structural change, verify a corresponding decision record is in the same PR per the project's convention. Flag changes that contradict an existing accepted decision without superseding it.
 
 **Skill-vs-repo conflict resolution (per `CLAUDE.md` P3.5):** when a generic React-stack skill recommends a pattern that conflicts with `CLAUDE.md` or `repo-conventions`, **default to the skill** unless applying it would require structural refactor (new dep, cross-cutting infra the repo lacks, app-wide bootstrap changes, or refactoring unrelated modules). For structural cases, **the repo wins for this PR** — flag as Optional Improvement: "Future task — adopt `<practice>` per `<skill>`. Current PR follows existing repo convention to keep scope minimal." A change implementing a generic rule that should have been a structural refactor without flag = MED.
 
@@ -60,18 +60,20 @@ If the change touches a domain not in your Required Reading list, list `.claude/
 
 Walk the MUST principles from `design-review` (SOLID, DRY, KISS, SoC, YAGNI, Cohesion/Coupling, Fail-fast, Explicitness, SSoT). For each: pass / pass-with-note / fail.
 
-### 4. Apply repo-conventions check (spa-velocity-specific)
+### 4. Apply repo-conventions check (per repo-conventions)
 
-- **Component shape:** function components only? `<ErrorBoundary>` is the only allowed class. Any new class component = HIGH.
-- **State placement:** server state in TanStack Query? Client state local-first then lifted? No mirror of query data into Zustand? Token storage unchanged unless ADR-backed?
-- **Forms:** RHF + Zod resolver? `<Field>` compound? Schema in `<feature>/schemas/`? Errors via `<FieldError>`?
-- **Routing:** `<ProtectedRoute>`/`<AdminRoute>` not bypassed? No `useEffect(() => navigate(...))` for guard logic?
-- **Error handling:** errors surface via toast / error-boundary / TanStack Query `error` field — not silenced. No retry loops outside TanStack Query's own config.
-- **Styling:** uses `cn()` helper? CVA for variants? Tailwind classes (no inline `style={...}` unless dynamic)?
-- **Naming:** `Service`/`Hook`/`Component`/`Schema` etc. suffixes used? `Manager`/`Helper`/`Util` avoided?
-- **Imports:** no deep reach into `@/features/<F>/internal-path/...`; consume via the feature's `index.ts`.
+Check the diff against whatever the project's `repo-conventions` documents — the categories below are the surfaces React apps usually pin down. Verify each against `repo-conventions`, not against a hardcoded stack (the libraries named are common examples, not mandates):
 
-A repo-conventions violation can be HIGH (auth, security, route guards, server-state mirror) or MED (forms, naming, imports). Cite the rule from `repo-conventions` skill in the finding.
+- **Component shape:** function components (an error boundary is the usual exception that must be a class)? A new class component is worth flagging unless the convention allows it.
+- **State placement:** server state lives in the server-cache layer (e.g. TanStack Query), not mirrored into a client store (e.g. Zustand/Redux)? Client state local-first, then lifted? Token storage unchanged unless backed by a decision record?
+- **Forms:** follow the project's form + validation pattern (per `repo-conventions`) — e.g. a form-state lib + schema validation, a shared field component, schemas colocated per feature?
+- **Routing:** the project's route guards (per `repo-conventions`) not bypassed? No `useEffect(() => navigate(...))` for guard logic?
+- **Error handling:** errors surface via the project's mechanism (toast / error boundary / data-layer error state) — not silenced. No ad-hoc retry loops outside the data layer's own config.
+- **Styling:** follows the project's styling convention (per `repo-conventions`) — e.g. a class-merge helper, a variant library, utility classes; no inline `style={...}` unless genuinely dynamic.
+- **Naming:** the project's suffix/naming rules followed? `Manager`/`Helper`/`Util` avoided?
+- **Imports:** no deep reach into a feature's internal paths; consume via its public surface (e.g. an `index.ts`) — per `repo-conventions`.
+
+A repo-conventions violation can be HIGH (auth, security, route guards, server-state mirror) or MED (forms, naming, imports) depending on what the project's conventions designate. Cite the specific rule from the project's `repo-conventions` skill in the finding.
 
 **Reliability-pattern checks** (cite the relevant skill in findings):
 
@@ -85,8 +87,8 @@ A repo-conventions violation can be HIGH (auth, security, route guards, server-s
 - **Multi-file format** (path headers when 2+ files changed)? LOW.
 - **High-risk restate (P3.3)** for auth/sessions/PII/RBAC/public API? Missing = HIGH.
 - **No forbidden waiver phrases** ("small change", "obvious fix", "trivial", "just a refactor")? Each occurrence = MED.
-- **Layered-router audit:** if `CLAUDE.md` was modified, scan additions for Layer-3 artifact citations (`ADR-[0-9]{3}`, file paths, code symbols, subagent step numbers). Each = MED.
-- **ADR audit:** if the diff introduces a structural change without a matching `docs/decisions/ADR-NNN-*.md` in the same PR = HIGH. Diff contradicts an existing Accepted ADR without superseding = HIGH.
+- **Layered-router audit:** if `CLAUDE.md` was modified, scan additions for Layer-3 artifact citations (decision-record IDs, file paths, code symbols, subagent step numbers). Each = MED.
+- **Decision-record audit:** if the diff introduces a structural change without a matching decision record in the same PR = HIGH. Diff contradicts an existing accepted decision without superseding = HIGH.
 
 ### 5.5 Apply change-sizing audit
 
@@ -104,7 +106,7 @@ Flag as LOW (or MED if load-bearing for understanding):
 - Non-imperative first line ("Fixing X" vs "Fix X").
 - Non-informative first line ("Update", "Phase 1", "WIP").
 - Body explains *what* but not *why*.
-- AI-attribution trailers (`Co-Authored-By: Claude` / `🤖 Generated with [Claude Code]`) — each = MED.
+- AI-attribution trailers (`Co-Authored-By: Claude` / `🤖 Generated with [Claude Code]`) — each = MED (per `instructions.md` P0.1).
 
 ### 6. Verdict
 
@@ -147,15 +149,15 @@ Tests: <ran / passed / failed / not run + reason>
 - SOLID: pass / pass-with-note / fail — <note>
 - DRY / KISS / SoC / YAGNI / Cohesion / Fail-fast / Explicitness / SSoT: ...
 
-### Repo-conventions review
+### Repo-conventions review (per repo-conventions)
 - Component shape (function components, no new classes):  pass / fail
 - State placement (no server-state mirror, no token re-store): pass / fail / N/A
-- Forms (RHF + Zod + Field compound):                     pass / fail / N/A
+- Forms (per repo-conventions):                           pass / fail / N/A
 - Routing (guards not bypassed):                          pass / fail / N/A
-- Error handling (toast / error-boundary / no swallow):   pass / fail
-- Styling (cn() + CVA + Tailwind):                        pass / fail
+- Error handling (surfaced, not swallowed):               pass / fail
+- Styling (per repo-conventions):                         pass / fail
 - Naming (no Manager/Helper/Util):                        pass / fail
-- Imports (consume via feature index.ts):                 pass / fail
+- Imports (consume via feature public surface):           pass / fail
 
 ### CLAUDE.md compliance
 - `Design review:` block present:                 yes / no
@@ -164,7 +166,7 @@ Tests: <ran / passed / failed / not run + reason>
 - Tests-first ordering:                           pass / fail
 - High-risk restate (P3.3) if applicable:         pass / fail / N/A
 - No forbidden waiver phrases:                    pass / fail
-- ADR present for structural changes:             pass / fail / N/A
+- Decision record present for structural changes: pass / fail / N/A
 
 ### Sources read
 - CLAUDE.md, design-review, repo-conventions, react-patterns, react-state-management

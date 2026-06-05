@@ -5,7 +5,7 @@ description: Use when deciding WHERE state lives — component-local, lifted, co
 
 # React State Management
 
-In this SPA the state lives in four layers. Picking the right one is the single highest-leverage decision in feature design — getting it wrong creates the rerender, sync, and "single-source-of-truth violation" bugs that dominate component code.
+In a typical React SPA, state lives in four layers. Picking the right one is the single highest-leverage decision in feature design — getting it wrong creates the rerender, sync, and "single-source-of-truth violation" bugs that dominate component code.
 
 ## The four layers
 
@@ -63,8 +63,8 @@ In this SPA the state lives in four layers. Picking the right one is the single 
 - Default value of `createContext` should be a sentinel that throws on access outside the provider, not a fake object.
 
 ### Zustand store
-- One store per feature domain when the domain has multiple slices, OR a single global store with feature-scoped slices when domains are small. This repo currently uses a single global store at `src/shared/store/store.ts`; introduce a feature store only when justified.
-- Use `immer` for nested mutations (already wired into the store).
+- One store per feature domain when the domain has multiple slices, OR a single global store with feature-scoped slices when domains are small. A common starting point is a single global store; introduce a feature store only when justified. Check `repo-conventions` for your project's actual store layout.
+- Use `immer` for nested mutations if your store wires it in.
 - Persist sparingly. Persisting auth tokens to localStorage is a security decision (see `frontend-security`).
 
 ### TanStack Query cache
@@ -86,4 +86,4 @@ In this SPA the state lives in four layers. Picking the right one is the single 
 - `react-patterns` — component shape; lifted state via props/callbacks.
 - `provider-pattern` — context provider mechanics.
 - `frontend-security` — token storage decisions.
-- `repo-conventions` — current Zustand layout, current TanStack Query key conventions.
+- `repo-conventions` — your project's client-store layout and server-cache (query-key) conventions.

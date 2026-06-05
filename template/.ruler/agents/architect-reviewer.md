@@ -28,11 +28,11 @@ Before any evaluation, MUST Read:
 
 **Always:**
 - `CLAUDE.md` — at minimum P3 (Code-Change Defaults inc. P3.4 mandatory-skill matrix), P4 (verification matrix), P8 (output contract).
-- `.claude/skills/repo-conventions/SKILL.md` — load-bearing facts for spa-velocity (feature layout, Zustand single global + TanStack Query split, `<ProtectedRoute>`/`<AdminRoute>`, RHF + Zod, Tailwind 4 + Radix + CVA, better-auth + `localStorage.bearer_token`, Vitest + Testing Library + Playwright per-module).
+- `.claude/skills/repo-conventions/SKILL.md` — the project's binding facts: feature layout, state-management split, routing/guards, forms, styling, auth/token storage, testing — per `repo-conventions`.
 - `.claude/skills/design-review/SKILL.md` — the MUST principles you'll apply to the plan.
 - `.claude/skills/plan-mode/SKILL.md` — the plan format you're judging against.
 - `.claude/skills/react-patterns/SKILL.md` and `.claude/skills/react-state-management/SKILL.md` — the React-flavored architectural lenses.
-- `.claude/skills/documentation-and-adrs/SKILL.md` — when the plan introduces a structural decision (new state-management lib, new auth flow, new public-API contract, app-wide bootstrap change). Verify the plan includes a step to write `docs/decisions/ADR-NNN-<title>.md`. List existing ADRs (`ls docs/decisions/`) so you can flag a plan that contradicts an Accepted ADR without naming it.
+- `.claude/skills/documentation-and-adrs/SKILL.md` — when the plan introduces a structural decision (new state-management lib, new auth flow, new public-API contract, app-wide bootstrap change). Verify the plan includes a step to document the decision per the project's convention (see `documentation-and-adrs`). Flag a plan that contradicts an existing accepted decision without superseding it.
 
 **Skill-vs-repo conflict resolution (per `CLAUDE.md` P3.5):** when a plan applies a generic React-stack skill in a way that conflicts with `repo-conventions`, **default to the skill** unless the plan would require structural refactor (new dep, cross-cutting infra the repo lacks, app-wide bootstrap changes, or refactoring unrelated modules). Structural cases: **plan should follow the repo convention for this PR** and recommend the skill's pattern as a separate Future task. A plan smuggling structural changes into unrelated scope is a HIGH finding (scope creep).
 
@@ -72,7 +72,7 @@ For each MUST principle, assess whether the plan **as written** would lead to a 
 
 ### 4. Apply repo-context critique
 
-- Does the plan match existing conventions (feature-folder layout, state-layer placement, route guards, RHF+Zod forms, error handling, sonner toasts)?
+- Does the plan match the project's existing conventions (per `repo-conventions`) — folder layout, state-layer placement, route guards, form pattern, error handling, notifications?
 - Are simpler in-scope alternatives missed?
 - Does any step require coordinated changes the plan didn't list (e.g., a query-key change that affects callers in 3 features)?
 - Are there callers/consumers that will break silently?
@@ -92,8 +92,8 @@ For each MUST principle, assess whether the plan **as written** would lead to a 
 - **High-risk restate (P3.3):** if the plan touches auth/sessions/RBAC/secrets/PII/public API/data migrations, the engineer must restate the requirements explicitly before plan steps. Missing = HIGH.
 - **Mandatory-skill invocation (P3.4):** plan should either invoke `tdd-workflow`, `failure-mode-analysis` (non-trivial), `repo-conventions`, `react-patterns`, `accessibility` (UI changes), AND name `design-review` for implementation phase, OR explicitly waive each. Silent omission is a finding.
 - **Verification matrix (P4):** plan triggers `qa-validator` (3+ files OR 1–2-file behavior change OR security-sensitive)? `security-reviewer` triggered if applicable? Missing reviewer triggers are MED unless exempt.
-- **ADR audit (per `documentation-and-adrs`):** if the plan introduces a load-bearing decision (new state-mgmt lib, new auth flow, new public-API contract, app-wide bootstrap change), plan MUST include a step to write `docs/decisions/ADR-NNN-<title>.md`. Missing structural ADR step = HIGH; load-bearing-but-smaller = MED. Plan contradicting an existing Accepted ADR without superseding = HIGH.
-- **Layered-router audit (per `documentation-and-adrs`):** if any plan step proposes editing `CLAUDE.md`, scan the proposed addition for Layer-3 artifact citations: `ADR-[0-9]{3}`, file paths, code symbols, subagent step numbers. Each = MED with the fix "move citation to skill/subagent."
+- **Decision-record audit (per `documentation-and-adrs`):** if the plan introduces a load-bearing decision (new state-mgmt lib, new auth flow, new public-API contract, app-wide bootstrap change), plan MUST include a step to document the decision per the project's convention. Missing structural decision-record step = HIGH; load-bearing-but-smaller = MED. Plan contradicting an existing accepted decision without superseding = HIGH.
+- **Layered-router audit (per `documentation-and-adrs`):** if any plan step proposes editing `CLAUDE.md`, scan the proposed addition for Layer-3 artifact citations: decision-record IDs, file paths, code symbols, subagent step numbers. Each = MED with the fix "move citation to skill/subagent."
 
 ### 7. Verdict
 
@@ -146,7 +146,7 @@ Plan reviewed: <number of steps, files involved, scope summary>
 - High-risk restate (P3.3) if applicable: pass / fail / N/A
 - Mandatory-skill invocation (P3.4) named or waived: pass / fail
 - Verification matrix (P4) triggers correct: pass / fail
-- ADR step present for structural changes: pass / fail / N/A
+- Decision-record step present for structural changes: pass / fail / N/A
 
 ### Sources read
 - CLAUDE.md (sections cited)

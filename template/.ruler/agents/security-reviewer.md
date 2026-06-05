@@ -12,8 +12,8 @@ Focused security pass. Catches what generic design review and test coverage do n
 
 REQUIRED for changes touching:
 
-- **Authentication** — login, signup, password handling, MFA, the better-auth client.
-- **Authorization** — `<ProtectedRoute>`, `<AdminRoute>`, RBAC permission checks, `useAuth` gate logic.
+- **Authentication** — login, signup, password handling, MFA, the auth client.
+- **Authorization** — the project's route guards, RBAC permission checks, auth gate logic (per `repo-conventions`).
 - **Sessions** — token storage, refresh, expiry handling, sign-out across tabs.
 - **Secrets / credentials** — anything that touches `import.meta.env.VITE_*`.
 - **Encryption** — at-rest token encryption, web crypto usage.
@@ -63,7 +63,7 @@ If the change touches a security-adjacent domain not in Required Reading, list `
 
 **Small (≤4 files OR ≤500 LOC):** read modified files (full), guard middleware in the call path, repo security conventions, tests for the affected surface.
 
-**Large (>4 files OR >500 LOC):** apply RLM mechanics. LOCATE for trust-boundary symbols (`<ProtectedRoute>`, `<AdminRoute>`, `useAuth`, `localStorage.bearer_token`, `dangerouslySetInnerHTML`, `import.meta.env`); EXTRACT only entry-point handlers + guards + scope-resolution + negative-case tests; CHUNK by trust boundary.
+**Large (>4 files OR >500 LOC):** apply RLM mechanics. LOCATE for trust-boundary symbols (the project's route guards and auth gate, its token-storage location, `dangerouslySetInnerHTML`, `import.meta.env` — per `repo-conventions`); EXTRACT only entry-point handlers + guards + scope-resolution + negative-case tests; CHUNK by trust boundary.
 
 ### 2. Run static checks
 
@@ -100,7 +100,7 @@ New runtime/build deps are a security surface (supply chain, CVE exposure, trans
 **Always Do (missing = HIGH):**
 - Validate all external/user input at the boundary (routes, form handlers).
 - HTTPS for all external communication.
-- Use Better Auth's hashing for passwords (never roll your own).
+- Use the auth library's hashing for passwords (never roll your own).
 - Set security headers via the host (CSP, HSTS, X-Frame-Options, X-Content-Type-Options).
 - Encode output (rely on React's auto-escaping; never bypass without sanitizer).
 - Run `npm audit` on dep additions; verify Step 2.5 dep-gate audit passed.
@@ -120,7 +120,7 @@ New runtime/build deps are a security surface (supply chain, CVE exposure, trans
 - Trust client-side validation as a security boundary (server must validate too — but you're the SPA reviewer; flag missing client-side checks as MED, missing server-side trust boundary as a comment to coordinate with API team).
 - Disable React's auto-escaping via raw HTML injection without an explicit sanitizer.
 - Use `eval()`, `Function(...)`, or equivalent on user input.
-- Store auth tokens anywhere other than the documented better-auth path (`localStorage.bearer_token`) without an ADR.
+- Store auth tokens anywhere other than the project's documented token-storage location (per `repo-conventions`) without a decision record.
 - Expose stack traces or internal error details to users.
 - `target="_blank"` without `rel="noopener noreferrer"`.
 - `window.addEventListener('message')` without validating `event.origin`.
@@ -129,23 +129,23 @@ New runtime/build deps are a security surface (supply chain, CVE exposure, trans
 
 | Category | What to check (SPA-specific) |
 |---|---|
-| **A01 Broken Access Control** | Route guards present at every entry point? `<ProtectedRoute>` / `<AdminRoute>` not bypassed by direct route definition? Cross-org leakage paths? Permission check inside route component (should be in guard)? |
-| **A02 Cryptographic Failures** | Token storage choice unchanged from ADR (`localStorage.bearer_token`)? Web Crypto API used correctly if any? No custom crypto. |
+| **A01 Broken Access Control** | Route guards present at every entry point? The project's route guards not bypassed by direct route definition? Cross-org leakage paths? Permission check inside route component (should be in guard)? |
+| **A02 Cryptographic Failures** | Token-storage choice unchanged from the project's documented convention (per `repo-conventions`)? Web Crypto API used correctly if any? No custom crypto. |
 | **A03 Injection** | XSS: `dangerouslySetInnerHTML` with sanitizer? `react-markdown` config without `rehype-raw` or with sanitization? Template injection in dynamic strings? `eval()`? |
 | **A04 Insecure Design** | Trust boundaries clear? Server-side validation assumed (don't trust client validation alone)? Rate limiting on auth-sensitive UI flows? |
 | **A05 Security Misconfiguration** | New `VITE_*` env var that should NOT be public? Verbose error messages leaking stack traces or tokens? CORS-impacting code? |
 | **A06 Vulnerable Components** | New dependency added? See Step 2.5. Maintained? Known CVEs? Transitive risk? |
-| **A07 Identification & Authentication Failures** | Token refresh handled correctly? Sign-out across tabs? Predictable tokens (better-auth handles, but verify usage)? Password reset flow tampering? |
+| **A07 Identification & Authentication Failures** | Token refresh handled correctly? Sign-out across tabs? Predictable tokens (the auth library typically handles this, but verify usage)? Password reset flow tampering? |
 | **A08 Software & Data Integrity Failures** | OAuth state validated against original request? Subresource Integrity on third-party scripts? Build artifact integrity? |
 | **A09 Security Logging & Monitoring Failures** | Auth failures logged with redaction? Sensitive data redacted from logs / Sentry? |
 | **A10 SSRF** (frontend-relevant variants) | Any iframe with user-controlled `src`? `sandbox` attribute correct? Outbound URL constructed from user input without allowlist? |
 
 ### 4. SPA-specific RBAC + auth checks
 
-- **Guard wired:** route uses `<ProtectedRoute>` (auth) or `<AdminRoute requiredPermission>` (RBAC)?
+- **Guard wired:** route uses the project's auth guard and RBAC/permission guard (per `repo-conventions`)?
 - **Permission logic in guard:** no permission check duplicated inside route component.
 - **Expired-session flow:** redirect to `/login` with `?from=<intended>` preserves intent + surfaces a toast.
-- **Cross-tab sign-out:** if a sign-out happens in tab A, tab B's auth state should reflect (better-auth handles via storage event).
+- **Cross-tab sign-out:** if a sign-out happens in tab A, tab B's auth state should reflect it (typically via a storage event, depending on the auth library).
 - **Negative-case tests:** at least one Playwright test asserts unauthenticated/insufficient-permission users are redirected/blocked.
 
 ### 5. Sensitive-data handling

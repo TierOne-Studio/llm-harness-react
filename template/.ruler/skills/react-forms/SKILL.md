@@ -5,7 +5,7 @@ description: Use when implementing or reviewing forms in this SPA — schema des
 
 # React Forms (React Hook Form + Zod)
 
-The repo's form pattern is RHF for state management + Zod for schemas + `@hookform/resolvers/zod` to bridge them. Field components are Radix-based via the `<Field>`/`<FieldLabel>`/`<Input>`/`<FieldError>` compound. This skill encodes the pattern and the failure modes it prevents.
+A robust form pattern is RHF for state management + Zod for schemas + `@hookform/resolvers/zod` to bridge them. Field markup is typically a small compound — a `Field` wrapper that pairs a label, an input, and an error slot, wiring `aria-invalid`/`aria-describedby` for you (commonly built on Radix primitives). This skill encodes the pattern and the failure modes it prevents. Check `repo-conventions` for the actual field components and helpers your project provides before introducing new ones.
 
 ## When this fires
 
@@ -20,11 +20,11 @@ The repo's form pattern is RHF for state management + Zod for schemas + `@hookfo
 
 ## Hard rules
 
-1. **Schema lives in `schemas/<feature>Schemas.ts`.** Zod is the source of truth for the shape AND the error messages. Don't duplicate validation rules inline.
+1. **Schema lives in a dedicated schema module (e.g. `schemas/<feature>Schemas.ts`), per your project's layout.** Zod is the source of truth for the shape AND the error messages. Don't duplicate validation rules inline.
 
 2. **`zodResolver` is the only resolver.** Don't write custom resolvers; if Zod can't express the rule, use a `superRefine` block in the schema.
 
-3. **Errors are shown next to the field, not in a banner above the form.** Use `<FieldError>` with the field's error from `formState.errors`. Set `aria-invalid` and `aria-describedby` on the input — the existing `<Field>` compound already wires this.
+3. **Errors are shown next to the field, not in a banner above the form.** Render the field's error from `formState.errors` in an error slot beside the input. Set `aria-invalid` and `aria-describedby` on the input — a well-built field compound wires this for you.
 
 4. **Submit-level errors (server-side) surface as a toast or as a top-of-form alert with role="alert".** Don't drop them into a single random field.
 
@@ -33,6 +33,8 @@ The repo's form pattern is RHF for state management + Zod for schemas + `@hookfo
 6. **Disable the submit button while pending.** Re-enable on settle. Use the mutation/`isSubmitting` state, not a manual `useState`.
 
 ## Pattern
+
+The example below uses placeholder field components (`Field` / `FieldLabel` / `FieldError`) and a `toast` notifier to illustrate the shape — substitute whatever field compound and notification helper your project provides (see `repo-conventions`).
 
 ```tsx
 // schemas/projectSchemas.ts
@@ -89,7 +91,7 @@ return (
 
 ## Accessibility tie-ins
 
-- Label every input. `<FieldLabel htmlFor="...">` is the existing compound.
+- Label every input. A label element associated via `htmlFor` (often part of the field compound) is the baseline.
 - `aria-invalid` and `aria-describedby` for inputs with errors.
 - `role="alert"` (or `aria-live="polite"`) on top-of-form error banners.
 - Move focus to the first invalid field on submit failure: RHF's `shouldFocusError: true` (default) handles this — keep it on.
@@ -99,4 +101,4 @@ return (
 - `accessibility` — focus, ARIA, keyboard, error-announcement.
 - `frontend-security` — never log form values that contain credentials/PII.
 - `react-data-fetching` — `useMutation` for submit handlers.
-- `repo-conventions` § Forms — current `<Field>` compound and schema layout.
+- `repo-conventions` § Forms — your project's actual field compound and schema layout.

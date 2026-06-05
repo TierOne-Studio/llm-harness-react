@@ -36,21 +36,23 @@ Routes are security boundaries first, navigation second. Every route the user ca
 
 ### Protected route + admin route
 
-Wrap routes that require authentication with a `<ProtectedRoute>` that:
-- Reads auth state from `useAuth()`.
+Wrap routes that require authentication in a route guard, e.g. `<ProtectedRoute>`, that:
+- Reads auth state from your auth hook (e.g. `useAuth()`).
 - Redirects unauthenticated users to `/login` with `?from=<intended>` for return-after-login.
 - Redirects banned/pending-approval users to the appropriate state page.
 
-Wrap routes that require RBAC permissions with `<AdminRoute requiredPermission="...">`:
-- Composes on top of `<ProtectedRoute>`.
+Compose an RBAC guard on top for routes that require permissions, e.g. `<AdminRoute requiredPermission="...">`:
+- Composes on top of the authentication guard.
 - Reads effective permissions from the auth/org-scope hooks.
 - Redirects denied users to a "no access" view (NOT silently to the home page — surfacing the denial is correct UX).
+
+Your project likely already provides these guards in some shape — check `repo-conventions` for the actual guard names and props before introducing new ones.
 
 ### Code splitting per heavy route
 
 ```tsx
-const ChartsPage = lazy(() => import('@/features/Charts/views/ChartsPage'))
-const AdminConsole = lazy(() => import('@/features/Admin/views/AdminConsole'))
+const ChartsPage = lazy(() => import('./features/Charts/views/ChartsPage'))
+const AdminConsole = lazy(() => import('./features/Admin/views/AdminConsole'))
 
 <Routes>
   <Route path="/charts" element={
@@ -78,7 +80,7 @@ const filter = params.get('filter') ?? 'all'
 
 ### Loaders are optional
 
-React Router 7 supports loader/action APIs. This repo currently fetches via TanStack Query hooks inside route components, not via loaders. Don't introduce loaders piecemeal — that's a structural change requiring an ADR (see `decision-rules` § 6 + `documentation-and-adrs`). If a route benefits from preloading (e.g., a slow chart), use TanStack Query's `queryClient.prefetchQuery` from a `useEffect` or from a navigation handler.
+React Router 7 supports loader/action APIs. If your project fetches via TanStack Query hooks inside route components rather than via loaders, don't introduce loaders piecemeal — that's a structural change that should be a deliberate, documented decision (see `decision-rules` + `documentation-and-adrs`). If a route benefits from preloading (e.g., a slow chart), use TanStack Query's `queryClient.prefetchQuery` from a `useEffect` or from a navigation handler.
 
 ### Expired session
 
@@ -103,4 +105,4 @@ When the auth client signals expired/invalid token, the guard should:
 - `react-data-fetching` — how the route gets its data.
 - `frontend-security` — auth-token handling, redirect flows.
 - `accessibility` — focus management on route change (move focus to main heading).
-- `repo-conventions` § Routing — current `<ProtectedRoute>` / `<AdminRoute>` shape.
+- `repo-conventions` — your project's route-guard contract and the actual guard shape.

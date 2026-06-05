@@ -51,9 +51,9 @@ If the change touches a domain not in your Required Reading list, list `.claude/
 
 ### 2. Run tests
 
-- `npm run test` (Vitest) at minimum.
-- `npm run test:e2e:<module>` for the affected feature(s).
-- `npm run test:all` if scope warrants and time permits.
+- The project's unit/component test command (e.g. `npm run test`) at minimum.
+- The project's e2e command for the affected feature(s), if it has one.
+- The full suite if scope warrants and time permits.
 - Failing tests = automatic BLOCK.
 
 ### 3. Coverage analysis
@@ -72,11 +72,11 @@ The right test for the right layer:
 
 | Layer | Expected test shape | MED finding when missing |
 |---|---|---|
-| Pure logic / schema / formatter | **Vitest unit test**, no DOM, no providers. | Logic that has 3+ branches but only one happy-path test. |
-| Custom hook (with providers) | **`renderHook` + wrapper** with the providers it needs (QueryClient, MemoryRouter, AuthContext). Asserts `result.current` shape. | Hook test that wraps in `<App>` (overkill) OR doesn't include the providers (cannot run; flaky). |
-| Component | **`renderWithProviders` + Testing Library**. Query priority: role > label > placeholder > text > testId. `userEvent` over `fireEvent`. Async via `findByX`. | Component test using `getByTestId` for elements that have a role; component test asserting on internal state instead of rendered output. HIGH if `data-testid` is the only stable selector — accessibility regression. |
-| Route component / route-level state | **Component test** with `MemoryRouter` + necessary providers, OR e2e if auth/guard/redirect is the focus. | Route test that doesn't test guard rejection (denied user → redirect). |
-| Cross-page workflow / RBAC / auth | **Playwright e2e** in `e2e/<module>/`. Stable selectors (role/label/text > CSS), no arbitrary sleeps. | New auth/RBAC flow without a Playwright test in `e2e/auth/` or `e2e/rbac/`. HIGH. |
+| Pure logic / schema / formatter | **Unit test** (e.g. Vitest/Jest), no DOM, no providers. | Logic that has 3+ branches but only one happy-path test. |
+| Custom hook (with providers) | **`renderHook` + wrapper** with the providers it needs (e.g. a query client, a router, an auth context). Asserts `result.current` shape. | Hook test that wraps in `<App>` (overkill) OR doesn't include the providers (cannot run; flaky). |
+| Component | **Render-with-providers helper + Testing Library**. Query priority: role > label > placeholder > text > testId. `userEvent` over `fireEvent`. Async via `findByX`. | Component test using `getByTestId` for elements that have a role; component test asserting on internal state instead of rendered output. HIGH if `data-testid` is the only stable selector — accessibility regression. |
+| Route component / route-level state | **Component test** with a memory router + necessary providers, OR e2e if auth/guard/redirect is the focus. | Route test that doesn't test guard rejection (denied user → redirect). |
+| Cross-page workflow / RBAC / auth | **End-to-end test** (e.g. Playwright) in the project's e2e dir. Stable selectors (role/label/text > CSS), no arbitrary sleeps. | New auth/RBAC flow without an e2e test covering it. HIGH. |
 
 ### 4. Edge-case analysis (8 failure-mode categories)
 

@@ -1,4 +1,4 @@
-# SENIOR ENGINEER — OPERATING PROFILE (spa-velocity)
+# SENIOR ENGINEER — OPERATING PROFILE (React)
 
 ## PRIORITY ORDER (HOW TO READ THIS)
 
@@ -66,7 +66,7 @@ You collaborate, push back when warranted, and defer to user judgment after one 
 
 ## P2 — REPO-CORE CONVENTIONS (ALWAYS APPLICABLE)
 
-This is a React SPA: Vite + TypeScript + React 19 + React Router 7 + Zustand + TanStack Query + RHF + Zod + Tailwind + Radix + better-auth + Vitest + Testing Library + Playwright. The binding facts of *this* codebase — feature folder layout, state-layer placement, routing patterns, form pattern, styling, auth flow, testing — live in the `repo-conventions` skill. Force-fire it on every code change in this repo (per P3.4).
+This is a React SPA. A common modern stack is Vite + TypeScript + React + React Router + a client-state store (e.g. Zustand) + a server-cache library (e.g. TanStack Query) + React Hook Form + Zod + Tailwind + Radix, an auth library, and Vitest + Testing Library + Playwright — but use whatever this project actually standardizes on. The binding facts of *this* codebase — feature folder layout, state-layer placement, routing patterns, form pattern, styling, auth flow, testing — live in the `repo-conventions` skill. Force-fire it on every code change in this repo (per P3.4).
 
 When generic React advice from a stack skill (`react-patterns`, `react-state-management`, etc.) and `repo-conventions` appear to disagree, follow the conflict-resolution rule in P3.5.
 
@@ -99,7 +99,7 @@ These skills MUST fire on every executable-code change in this repo, even if the
 | `plan-mode` | 3+ steps OR multi-file OR architectural OR debugging-with-uncertain-root-cause. |
 | `react-patterns` | Any change touching components, hooks, or rendering. |
 | `accessibility` | Any change touching UI markup or interactive elements. |
-| `cross-repo-workspace` | Session has access to both spa-velocity and api-velocity (primary cwd is one, the other is in Additional working directories). |
+| `cross-repo-workspace` | Session has access to two or more repos (primary cwd is one, others are in Additional working directories). |
 
 If a force-fire skill genuinely doesn't apply to the change, state it with reason: `<skill> waived — <reason>`. Silent omission is a P8 contract violation.
 
@@ -286,7 +286,7 @@ Situation → skill lookup. (Skill bodies are the canonical source; this is the 
 | Streaming/chat AI UIs | `ai-ui-patterns` |
 | Modern React composition idioms | `react-composition-2026` (+ `react-2026` for the broader stack tour) |
 | Custom hooks, HOCs, render-props, providers, compound, presentational/container, modules, mixins, proxies | `hooks-pattern` / `hoc-pattern` / `render-props-pattern` / `provider-pattern` / `compound-pattern` / `presentational-container-pattern` / `module-pattern` / `mixin-pattern` / `proxy-pattern` |
-| Workspace with both spa-velocity + api-velocity — lens-switching, ADR qualification, coordination docs, dual-memory capture | `cross-repo-workspace` |
+| Workspace with two or more repos — lens-switching, ADR qualification, coordination docs, per-repo memory capture | `cross-repo-workspace` |
 
 ---
 
