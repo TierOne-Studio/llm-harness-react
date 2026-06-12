@@ -1,6 +1,6 @@
 # Default agents to run when --agents is not specified
 # Uses case-insensitive substring matching
-default_agents = ["copilot", "claude", "codex"]
+default_agents = ["copilot", "claude", "codex", "cursor"]
 
 # --- Global MCP Server Configuration ---
 [mcp]
