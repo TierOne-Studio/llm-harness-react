@@ -5,6 +5,10 @@ license: MIT
 metadata:
   author: currents.dev
   version: "1.1"
+harness:
+  tier: frontend
+  family: frontend-platform
+  gist: "E2E patterns by framework & surface (index + topic dirs)"
 ---
 
 # Playwright Best Practices

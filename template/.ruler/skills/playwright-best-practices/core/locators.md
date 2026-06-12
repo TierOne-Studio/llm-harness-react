@@ -11,6 +11,8 @@
 
 ## Priority Order
 
+The priority principle (and its accessibility rationale) is canonical in `react-testing` § Hard rules; Playwright locators follow the same order — CSS/XPath are the test-ID-tier last resort.
+
 Use locators in this order of preference:
 
 1. **Role-based** (most resilient): `getByRole`

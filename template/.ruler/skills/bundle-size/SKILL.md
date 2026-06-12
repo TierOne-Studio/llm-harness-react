@@ -1,6 +1,10 @@
 ---
 name: bundle-size
 description: Use when adding a new dependency, when the build output grows noticeably, when investigating bundle composition (Rollup visualizer / Vite analyze), or when judging tree-shaking, side-effect declarations, and import-style choices. Pair with `react-performance` for runtime work and `vite` for Vite-specific config. NOT for general performance investigations or pure runtime hot paths.
+harness:
+  tier: frontend
+  family: frontend-platform
+  gist: "Bundle audits, tree-shaking, lazy routes, dependency cost"
 ---
 
 # Bundle Size

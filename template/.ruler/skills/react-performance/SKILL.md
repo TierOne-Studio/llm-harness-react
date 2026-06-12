@@ -1,11 +1,17 @@
 ---
 name: react-performance
-description: Use when investigating actual rerender cost, slow lists, oversized effects, code-splitting decisions, or Core Web Vitals issues — and when judging whether a memoization change (`React.memo`, `useMemo`, `useCallback`) is justified. Pairs with `react-render-optimization` (the patterns.dev catalog) for deeper rerender mechanics. NOT for general bundle-size concerns (use `bundle-size`), routing-level code splits (use `react-routing`), or server-state caching (use `react-data-fetching`).
+description: Use when investigating actual rerender cost, slow lists, oversized effects, code-splitting decisions, or Core Web Vitals issues — when judging whether a memoization change (`React.memo`, `useMemo`, `useCallback`) is justified — and when reducing unnecessary re-renders (or rerenders), improving state design to avoid keystroke-driven cascades, or diagnosing React performance issues. Carries the 25-pattern deep render-mechanics catalog in topics/ (memoization & derived state, subscriptions & effects, transitions & scheduling, DOM/lists, SSR & resource loading). NOT for general bundle-size concerns (use `bundle-size`), routing-level code splits (use `react-routing`), or server-state caching (use `react-data-fetching`).
+harness:
+  tier: frontend
+  family: react-core
+  gist: "Measurement discipline + the 25-pattern deep render-mechanics catalog (index + topics)"
 ---
 
 # React Performance
 
 Performance work in React is a measurement game, not a memoization game. Premature `useMemo` everywhere is **negative** value — it adds work, costs memory, and obscures the real bottleneck. This skill encodes the discipline.
+
+The systematic MEASURE → IDENTIFY → FIX → VERIFY → GUARD workflow is canonical in `js-performance-patterns` § The 5-step optimization workflow; this skill applies it to React.
 
 ## When this fires
 
@@ -39,7 +45,7 @@ Lists over ~100 visible items benefit from virtualization. Use `@tanstack/react-
 
 ### Code-split heavy routes
 
-Use `React.lazy` + `<Suspense>` for routes that pull in large dependency trees (charts, editors, AI playgrounds). Pair with the route-level boundary so the rest of the app stays fast. See `react-routing` § Code splitting.
+Use `React.lazy` + `<Suspense>` for routes that pull in large dependency trees (charts, editors, AI playgrounds). Pair with the route-level boundary so the rest of the app stays fast. See `react-routing` § Code splitting. Canonical splitting strategy (what to split, when) lives in `bundle-size`; this section covers the React mechanics only.
 
 ### Lazy-load on interaction or visibility
 
@@ -71,9 +77,30 @@ A theme context updated once per session is fine. A mouse-position context reren
 - **Hidden side effects in renders.** A `console.log` at module-top is fine; an `analytics.track()` at module-top runs on every import. Be intentional.
 - **`Promise.race` for timeout** — see `async-error-handling`.
 
+## Deep render mechanics — the 25-pattern catalog (topics/)
+
+Patterns numbered 1–25 (from [patterns.dev](https://www.patterns.dev/), MIT), grouped by
+theme. Read only the topic file(s) matching the situation:
+
+| Situation | Patterns | Read |
+|---|---|---|
+| Deciding what to memoize vs derive; `useMemo`/`useCallback`/`React.memo`; redundant state; lazy `useState` init; unstable default props; components defined inside components; hoisting static JSX; splitting combined hooks | 1, 3, 4, 10, 12, 16, 20 | `topics/memoization-and-derived-state.md` |
+| Re-renders from over-broad subscriptions; unstable callbacks; side effects modeled as state+effect; high-frequency values (`useRef`); effect dependency hygiene; one-time app init; stable event subscriptions | 2, 5, 6, 7, 9, 13, 14, 19 | `topics/subscriptions-and-effects.md` |
+| Typing/clicking blocked by expensive updates; `startTransition`, `useDeferredValue`, transition-wrapped route navigation | 8, 17, 25 | `topics/transitions-and-scheduling.md` |
+| Long lists (`content-visibility`, virtualization); layout thrashing (batched DOM reads/writes); SVG animation repaints; `&&` rendering `0`/`NaN`/`""` | 11, 18, 21, 22 | `topics/dom-rendering-and-lists.md` |
+| SSR hydration flicker, `suppressHydrationWarning`, `preload()`/`preinit()` resource hints for Vite SPAs | 15, 23, 24 | `topics/ssr-and-resource-loading.md` |
+
+Catalog rules of thumb:
+
+- **`useMemo` vs plain `const`:** primitives and single property accesses are free — skip `useMemo`; wrap only iteration/transformation (filter/sort, building data structures, `JSON.parse`).
+- **Derive, don't store:** values computable from existing state/props are computed during render, never mirrored into `useState` + `useEffect` (pattern 1 — the highest-impact fix).
+- **Never define components inside components** (including inside `useMemo`/`useCallback`) — remounts the subtree and loses state every render (pattern 16).
+- **Subscribe coarsely:** consume the derived boolean (`isMobile`, `isLoggedIn`), not the raw fast-changing value (pattern 2).
+- **`useTransition` vs `useDeferredValue`:** wrap the update when you control the setter; wrap the consumption when the value comes from props or a library (patterns 8, 17).
+- **React Compiler note:** with the compiler enabled, manual `useMemo`/`memo()`/hoisting becomes less necessary; extracting components for early returns is still valuable.
+
 ## Cross-references
 
-- `react-render-optimization` — patterns.dev catalog; deeper rerender mechanics.
 - `react-state-management` — derived-state and context discipline.
 - `bundle-size` — code-split, tree-shake, third-party audit.
 - `js-performance-patterns` — JS-runtime-level loop and data-structure patterns.

@@ -1,6 +1,10 @@
 ---
 name: react-forms
 description: Use when implementing or reviewing forms in this SPA — schema design with Zod, React Hook Form integration, field-level vs submit-level validation, error display, accessible markup, async submit handling. NOT for plain controlled inputs without validation, search inputs (often unmanaged), or generic component shape (use `react-patterns`).
+harness:
+  tier: frontend
+  family: react-core
+  gist: "RHF + Zod, schema-first, accessible field errors"
 ---
 
 # React Forms (React Hook Form + Zod)

@@ -1,16 +1,19 @@
 ---
 name: spec-workflow
 description: Use BEFORE implementing any behavioral code change (new feature, improvement, bug fix, refactor that changes behavior, behavioral change, requirement-correction, follow-up) — a Markdown SPEC under docs/specs/ MUST be created or updated, and clarifying questions asked, BEFORE writing code; and reconciled with what shipped AFTER. Governs the docs/specs/ folder, SPEC naming, the SPEC template, create-vs-update rules, the requirements clarification gate, the pre/post workflow, and code↔doc sync. The spec-steward agent is the writer; this skill is the procedure. NOT for non-code, type-only, or config-with-no-behavior changes (state the waiver phrase). Pairs with documentation-and-adrs (ADRs), plan-mode, tdd-workflow, acceptance-verifier, cross-repo-workspace.
+harness:
+  tier: shared
+  family: process
+  gist: "SPEC before code on behavioral changes; reconcile after"
 ---
 
 # Spec Workflow
 
 Documentation is part of the implementation, not an extra. Every **behavioral** code change
 begins by creating/updating a Markdown SPEC and ends by reconciling it with what shipped.
-The **`spec-steward`** agent is the single writer of `docs/specs/**`; this skill is the procedure
-it and the main agent follow. If your project records the load-bearing rationale behind this
-workflow as an ADR, cite it (per `documentation-and-adrs`) — a SPEC **cites** ADRs, it never
-restates their rationale.
+The **`spec-steward`** agent is the single writer of `docs/specs/**`; this skill is the procedure.
+If your project records the load-bearing rationale behind this workflow as an ADR, cite it
+(per `documentation-and-adrs`) — a SPEC **cites** ADRs, it never restates their rationale.
 
 ## Bootstrap (first use in a fresh project)
 
@@ -23,14 +26,16 @@ On the first behavioral change in a project that has no `docs/specs/` yet, `spec
 
 No external files are required — a scaffolded project gets the full workflow from this skill.
 
-## Where specs live (per-repo, split by layer)
+## Where specs live
 
-- A **UI** repo holds **`ui`** specs: screens, flows, forms, client validation, UX.
-- An **API / backend** repo holds **`contract`** specs: entities, endpoints, DTOs, RBAC, migrations.
-- A cross-cutting feature has **one spec per layer**, cross-linked via the `counterpart_spec`
-  frontmatter field (`"<other-repo>#SPEC-NNN"`), bound by a coordination doc. See `cross-repo-workspace`.
-  One spec per (feature × layer) — never two for the same layer.
-- A **single-repo** project sets `counterpart_spec: "standalone"`.
+All of this app's specs live in `docs/specs/`, marked with the `layer` frontmatter field:
+
+- **`ui`** specs (this repo): screens, flows, forms, client validation, UX.
+- A feature **spanning this repo and a sibling repo** (e.g., the backend that serves it) carries
+  **one spec per repo**, cross-linked via the `counterpart_spec` frontmatter field using the
+  `"<other-repo>#SPEC-NNN"` form, bound by the shared API contract — see `cross-repo-workspace`.
+  One spec per (feature × repo) — never two for the same repo. A change confined to this repo has
+  just the one spec; set `counterpart_spec: "standalone"`.
 
 ## Naming & location
 
@@ -43,7 +48,8 @@ No external files are required — a scaffolded project gets the full workflow f
 ## Does this change need a SPEC?
 
 YES for any change with **observable behavior**: feature, improvement, bug fix, behavioral
-change, requirement-correction, follow-up, or a refactor that changes behavior.
+change, requirement-correction, follow-up, or a refactor that changes behavior — anywhere in
+the app.
 
 The ONLY exemptions (state the exact phrase, mirroring `tdd-workflow` waivers):
 
@@ -55,56 +61,59 @@ SPEC waived — config change with no behavior impact.
 
 "small change", "obvious fix", "trivial", "just a refactor" are **NEVER** valid skips. A pure
 no-behavior refactor needs no new SPEC, but if one exists for that feature, add a Change Log note.
+The waiver-phrase pattern and its forbidden non-waivers are canonical in `tdd-workflow` § Waivers — new exemption categories must be added there first.
 
 ## PRE-coding workflow (before any implementation or test code)
 
-1. **Classify** the request; decide if it is behavioral (above). If exempt, state the waiver and stop here.
+1. **Classify** the request; decide if it is behavioral (above) and whether it also spans a sibling repo (see `cross-repo-workspace`). If exempt, state the waiver and stop here.
 2. **Search** `docs/specs/README.md` + grep `docs/specs/` for a SPEC governing this feature/files. (Anti-duplicate.)
 3. **Resolve ambiguity — the clarification gate.** Scan for underspecification across: goal,
-   target user/role, scope, behavior (happy path + edge/error cases), data model
-   (cardinality/nullability/validation), RBAC, acceptance criteria, affected surfaces, UX states.
-   **Verify what the codebase already answers first**, then for each remaining dimension decide
-   Known / Assumable-safe / **Must-ask**. If any Must-ask remains, the steward returns
-   `NEEDS-INPUT` and the main agent **asks the user** (batched, ≤4, options where possible).
-   **Do NOT write the SPEC or any code until material ambiguity is resolved.** Never ask what
-   you can verify in the code; never guess past a material ambiguity.
+   user/caller/role, scope, behavior (happy path + edge/error cases), data model
+   (cardinality/nullability/constraints/validation), RBAC scopes, acceptance criteria, affected
+   UI surfaces + consumed endpoints + API contract types, UX states. **Verify what the
+   codebase already answers first**, then for each remaining dimension decide Known /
+   Assumable-safe / **Must-ask**. If any Must-ask remains, the steward returns `NEEDS-INPUT` and the
+   main agent **asks the user** (batched, ≤4, options where possible). **Do NOT write the SPEC or
+   any code until material ambiguity is resolved.** Never ask what you can verify in the code;
+   never guess past a material ambiguity. This gate mirrors `plan-mode` § Step 0: when a change
+   needs both a SPEC and a plan, run the gate ONCE and record the assumptions in both artifacts.
 4. **Decide create vs update** — if a SPEC already covers this feature, UPDATE it; never open a second.
-5. **Create/update the SPEC** (via `spec-steward`) from `_template.md`. It must pass the
-   readiness rubric before leaving `Draft`: goal + target user; in- and out-of-scope; every AC
-   falsifiable + mapped to a planned test; data model fully typed; RBAC stated; every named
-   edge/error case has defined behavior; **no `TBD`/placeholder in a load-bearing section**.
+5. **Create/update the SPEC** (via `spec-steward`) from `_template.md`. It must pass the readiness
+   rubric before leaving `Draft`: goal + user/caller; in- and out-of-scope; every AC falsifiable +
+   mapped to a planned test; data model fully typed; RBAC scopes stated; every named edge/error
+   case has defined behavior; **no `TBD`/placeholder in a load-bearing section**.
 6. **Load-bearing check** — if the change makes a decision that would force updating 3+
    skills/docs/files, also write/cite an **ADR** (`documentation-and-adrs`).
-7. **Architect review** — when the plan touches 3+ files OR auth/sessions/RBAC/route-guards/
-   state-mgmt-rewrites/data-migration, route the SPEC through `architect-reviewer`
-   (`APPROVE_PLAN`/`REVISE_PLAN`/`BLOCK`). Revise the SPEC on REVISE/BLOCK; no code until `APPROVE_PLAN`.
-   Cross-repo: the architect reviews BOTH specs + the coordination doc together.
+7. **Architect review** — when the plan touches 3+ files OR auth/RBAC/routing-guard/API-contract
+   shape, route the SPEC through `architect-reviewer`
+   (`APPROVE_PLAN`/`REVISE_PLAN`/`BLOCK`). Revise on REVISE/BLOCK; no code until `APPROVE_PLAN`.
+   Cross-repo: the architect reviews BOTH repos' specs + the shared API contract together.
 8. **Present** the SPEC (or its diff) + the architect verdict + the plan, then STOP for approval.
 
 ## DURING coding
 
 If you discover the SPEC was wrong, incomplete, or based on a bad assumption, **STOP, fix the
-SPEC first** (update assumptions + Change Log), then resume. Code must never silently diverge from the SPEC.
+SPEC first** (update assumptions + Change Log), then resume. Code must never silently diverge.
 
 ## POST-coding workflow (before declaring done / opening a PR)
 
 Delegate to `spec-steward` (it edits `docs/specs/**`):
 
 1. **Reconcile** — *Affected areas* matches the real diff; ACs updated if behavior changed; each AC linked to its now-green test (file:line).
-2. **Assumptions** — mark each `Confirmed` or `Corrected` (strike + replace wrong ones). A `Confirmed` assumption the code contradicts is a `BLOCK`, not a silent rewrite.
+2. **Assumptions** — mark each `Confirmed` or `Corrected`. A `Confirmed` assumption the code contradicts is a `BLOCK`, not a silent rewrite.
 3. **Change Log** — append `YYYY-MM-DD · PR #NN · <what> · <why>` (note corrected assumptions).
 4. **Memory** — if an original assumption was wrong, the main agent also writes a `feedback` memory entry (P7).
 5. **Status** — `Draft` → `Implemented`.
 6. **Review chain** — `code-reviewer` + `qa-validator` (+ `security-reviewer` if applicable) + `spec-steward` + `acceptance-verifier`. The steward's `BLOCK` and `acceptance-verifier`'s `BLOCK` are binding on "done."
-7. If the project has the deterministic gate (below), CI `spec-gate` must be green; for cross-repo, the `counterpart_spec` links must resolve.
+7. If the project has the deterministic gate (below), CI `spec-gate` must be green; for a cross-repo feature, the `counterpart_spec` links must resolve.
 
 ## Definition of done (spec dimension; extends P8.0)
 
-A behavioral change is not done until: a governing SPEC was created/updated this change and is
-`Implemented`; every AC maps to an executed-green test; no assumption is `Unconfirmed` or
-contradicted; the Change Log has this change's entry; Affected areas matches the diff; the SPEC
-passed the readiness rubric with no unresolved Must-ask ambiguity; `spec-steward` returned
-non-`BLOCK`. When P4 triggered, `architect-reviewer` returned `APPROVE_PLAN`.
+A behavioral change is not done until: a governing SPEC was created/updated and is `Implemented`;
+every AC maps to an executed-green test; no assumption is `Unconfirmed` or contradicted; the Change
+Log has this change's entry; Affected areas matches the diff; the SPEC passed the
+readiness rubric with no unresolved Must-ask ambiguity; `spec-steward` returned non-`BLOCK`. When P4
+triggered, `architect-reviewer` returned `APPROVE_PLAN`.
 
 ## Deterministic gates (optional per-project add-on)
 
@@ -113,14 +122,14 @@ scripts live **outside `.ruler/`**, so a harness-scaffolded project starts with 
 (this skill + `spec-steward` + `acceptance-verifier` + human PR review). To upgrade it to a **hard
 gate**, add to the project (recommended once the team relies on the workflow):
 
-- **`spec-gate`** — a behavioral `src/**` change must ship with a `docs/specs/**` change, OR a
-  `[skip-spec: type-only|config-no-behavior|non-code]` waiver token in the commit/PR body.
-  ("small" / "obvious" / "trivial" are NEVER valid skips.)
+- **`spec-gate`** — a behavioral source change under `src/**` (`*.ts`/`*.tsx`, excluding tests/`*.d.ts`)
+  must ship with a `docs/specs/**` change, OR a `[skip-spec: type-only|config-no-behavior|non-code]`
+  waiver token in the commit/PR body. ("small" / "obvious" / "trivial" are NEVER valid skips.)
 - **completeness lint** — no placeholder/empty required section in a SPEC.
 - **cross-link lint** — `counterpart_spec` / `related_specs` resolve.
 
-Wire these as a `pull_request` CI job. Until then, `spec-steward`'s `BLOCK` + mandatory human PR
-review are the enforcement.
+Wire these as a `pull_request` CI job (it pairs naturally with the `quality-gates` skill). Until
+then, `spec-steward`'s `BLOCK` + mandatory human PR review are the enforcement.
 
 ---
 
@@ -131,23 +140,23 @@ review are the enforcement.
 id: SPEC-NNN
 title: "SPEC-NNN: <Human Title>"
 status: Draft            # Draft | Approved | Implemented | Superseded by SPEC-XXX
-layer: ui                # ui (frontend) | contract (api/backend)
+layer: ui                # this repo's specs are ui specs (the SPA)
 owner: <name>
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
-feature_paths:           # source of truth this spec governs (this repo)
+feature_paths:           # source of truth this spec governs
   - src/features/<Feature>
 related_adrs: []         # e.g. [ADR-00X]
 related_specs: []        # same-repo siblings, e.g. [SPEC-002]
-counterpart_spec: ""     # paired spec in the OTHER repo, e.g. "<other-repo>#SPEC-007"; "standalone" if none
-coordination_doc: ""     # for cross-repo changes, e.g. "docs/<feature>-coordination.md"
+counterpart_spec: ""     # the sibling repo's spec for a cross-repo feature, e.g. "<other-repo>#SPEC-002"; "standalone" if confined to this repo
+coordination_doc: ""     # for a cross-repo feature, e.g. "docs/<feature>-coordination.md"
 ---
 
 # SPEC-NNN: <Human Title>
 
 ## 1. Summary (intended behavior)
 
-One paragraph: what the system should do after this change, from the user's perspective.
+One paragraph: what the system should do after this change, from the user's / caller's perspective.
 
 ## 2. Context & problem
 
@@ -171,27 +180,27 @@ Numbered; each gets a status. Wrong ones are struck and corrected in place.
 
 ## 5. Affected areas
 
-Files / modules / routes / RBAC scopes / API contracts / schema. Keep aligned with the real diff.
+Keep aligned with the real diff.
 
-- `src/features/<Feature>/...`
-- Routes / guards: ...
-- API endpoints consumed: ...
+- App (`src/`): components / routes / guards / hooks / state ...
+- API contract (types/schemas this app consumes): types changed ...
+- Sibling backend repo (only if the feature spans repos — see `cross-repo-workspace`): endpoints relied on ...
 
 ## 6. Acceptance criteria (falsifiable; each maps to a test)
 
 | # | Criterion (observable behavior) | Proving test (file:line) |
 |---|---|---|
-| AC1 | <e.g. "Returns 403 when user is in a different org"> | <unit/e2e path> |
-| AC2 | ... | ... |
+| AC1 | <e.g. "Redirects to /login when the session is expired"> | <component test / e2e path> |
+| AC2 | <e.g. "Edit form shows a field error when the API returns 422"> | <component test / e2e path> |
 
 ## 7. Implementation plan
 
 3–8 steps (mirrors plan-mode). Each: `files:` / `tests:` / `risk:` / `slice:`.
+Contract-first when consuming a new endpoint: define the types and API client, then the query hook, then the UI.
 
 ## 8. Testing plan
 
-Which layer proves which AC — unit/component (e.g. Vitest + Testing Library), e2e (e.g. Playwright in `e2e/<module>/`).
-Name the test files.
+Which layer proves which AC — unit/component (Vitest + Testing Library), seam e2e (Playwright in `e2e/`). Name the test files.
 
 ## 9. Risks & failure modes
 
@@ -218,10 +227,10 @@ Durable *what + how* for this project's features and behavioral changes. A SPEC 
 with what shipped **after**. The `spec-steward` agent owns this folder; the `spec-workflow`
 skill carries the full procedure.
 
-**Layer:** a UI repo holds **`ui`** specs (screens, flows, forms, client validation, UX); an
-API/backend repo holds **`contract`** specs (entities, endpoints, DTOs, RBAC, migrations). A
-cross-cutting feature has one spec per layer, cross-linked via the `counterpart_spec`
-frontmatter field. Single-repo projects use `counterpart_spec: "standalone"`. See `cross-repo-workspace`.
+**Layer:** this repo holds **`ui`** specs (screens, forms, validation, UX), marked via the
+`layer` frontmatter field. A feature spanning this repo and a sibling repo has one spec per repo,
+cross-linked via `counterpart_spec` (`"<other-repo>#SPEC-NNN"` — see `cross-repo-workspace`); a
+change confined to this repo uses `counterpart_spec: "standalone"`.
 
 **SPEC vs ADR vs plan:** a SPEC is *what we build + how* (this folder). An **ADR**
 (`docs/decisions/`) is *why a load-bearing decision was made*; SPECs cite ADRs, they do not
@@ -229,9 +238,9 @@ restate rationale. `plan-mode` is ephemeral execution sequencing, persisted *int
 
 ## Index
 
-| # | Title | Status | Updated | Feature paths |
-|---|---|---|---|---|
-| _none yet_ | | | | |
+| # | Title | Layer | Status | Updated | Feature paths |
+|---|---|---|---|---|---|
+| _none yet_ | | | | | |
 
 ## Status lifecycle
 
@@ -244,13 +253,13 @@ restate rationale. `plan-mode` is ephemeral execution sequencing, persisted *int
 
 ## Creating a SPEC
 
-1. **Search first** (this index + a grep of `docs/specs/`). One SPEC per feature/capability — never two.
-2. **Resolve ambiguity** — ask the user any material clarifying questions *before* writing (see `spec-workflow` §clarification gate).
-3. `cp docs/specs/_template.md docs/specs/SPEC-NNN-<short-kebab-title>.md` where `NNN` is the next free number.
+1. **Search first** (this index + a grep of `docs/specs/`). One SPEC per feature — never two.
+2. **Resolve ambiguity** — ask the user any material clarifying questions *before* writing (see `spec-workflow`).
+3. `cp docs/specs/_template.md docs/specs/SPEC-NNN-<short-kebab-title>.md` where `NNN` is the next free number; set `layer`.
 4. Fill it in. Acceptance criteria must be falsifiable and each map to a test. No `TBD`/placeholder in a load-bearing section before it leaves `Draft`.
 5. If the change makes a load-bearing decision, also write/cite an ADR (`documentation-and-adrs`).
 6. Add a row to the index above.
-7. For a cross-cutting change, create/update the paired spec in the other repo, set `counterpart_spec` on both, and write a coordination doc.
+7. For a feature spanning this repo and a sibling repo, create the sibling repo's spec too, set `counterpart_spec` on both, and write a coordination doc (see `cross-repo-workspace`).
 
 ## Updating a SPEC (the default for any existing feature)
 

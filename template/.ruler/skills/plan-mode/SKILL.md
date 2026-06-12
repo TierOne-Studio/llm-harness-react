@@ -1,6 +1,10 @@
 ---
 name: plan-mode
-description: Use BEFORE executing non-trivial tasks — 3+ steps, multi-file changes, architectural or design decisions, debugging with uncertain root cause, verification work, anything with meaningful behavior or delivery risk. Produces a per-step plan with verify clauses, dependency-graph analysis, slice strategy, and assumptions block. NOT for trivial single-file edits, factual answers, or read-only investigations where the answer is obvious.
+description: Use BEFORE executing non-trivial tasks — 3+ steps, multi-file changes, architectural or design decisions, debugging with uncertain root cause, verification work, anything with meaningful behavior or delivery risk. Spans the app's API contract/type layer, query hooks, and components. Produces a per-step plan with verify clauses, dependency-graph analysis, slice strategy, and assumptions block. NOT for trivial single-file edits, factual answers, or read-only investigations where the answer is obvious.
+harness:
+  tier: shared
+  family: process
+  gist: "Plans for 3+ step / multi-file / architectural work"
 ---
 
 # Plan Mode
@@ -51,14 +55,16 @@ Success criteria MUST be explicit and falsifiable.
 
 ### When the plan introduces a structural decision
 
-If any plan step introduces a load-bearing engineering decision (new state-management library, new auth flow, new public-API contract, app-wide bootstrap change — anything that will be cited from `CLAUDE.md` / `repo-conventions` / a skill), the plan MUST include an explicit step to write the corresponding ADR in `docs/decisions/ADR-NNN-<title>.md`. The ADR step lives alongside the implementation steps with its own `verify:` clause (the file exists, has all required sections, and the index in `docs/decisions/README.md` is updated). See `documentation-and-adrs` for the ADR format.
+If any plan step introduces a load-bearing engineering decision (new persistence layer, new state-management library, new auth library or auth flow, new public-API contract, app-wide bootstrap change — anything that will be cited from `CLAUDE.md` / `repo-conventions` / a skill), the plan MUST include an explicit step to write the corresponding ADR in `docs/decisions/ADR-NNN-<title>.md`. The ADR step lives alongside the implementation steps with its own `verify:` clause (the file exists, has all required sections, and the index in `docs/decisions/README.md` is updated). See `documentation-and-adrs` for the ADR format.
 
 ### Identify the dependency graph BEFORE slicing
 
-Before writing the per-step plan, sketch what depends on what. The dependency graph dictates implementation order — foundations first, consumers last. For a React SPA, the typical layering is:
+Before writing the per-step plan, sketch what depends on what. The dependency graph dictates implementation order — foundations first, consumers last. In this app, the API contract/type layer sits at the root of the graph and everything else depends on it: for a new endpoint, define the types and API client first, then the query hooks, then the components that consume them.
+
+The typical layering is:
 
 ```
-Schema / type / API contract (server-side, or zod schema)
+Schema / type / API contract (zod schema or TypeScript types for the endpoint)
     │
     ├── Service / API client (e.g. a fetch/axios wrapper or your auth library's client)
     │       │
@@ -73,19 +79,21 @@ Schema / type / API contract (server-side, or zod schema)
     └── Client-state store (Zustand) — only when truly cross-tree shared
 ```
 
+When a change depends on a coordinated change in the sibling backend repo (see `cross-repo-workspace`), the API contract is the common foundation: agree the contract change first, then implement this app against it, with end-to-end (`e2e/`, commonly Playwright) tests that exercise the seam.
+
 Plan steps follow the graph bottom-up. Two consequences: (a) early steps unblock multiple later ones; (b) a step that touches both top and bottom of the graph is too wide — split it.
 
 ### Slicing strategies (pick one explicitly)
 
-- **Vertical (default — tracer bullet).** Each slice cuts through every layer end-to-end (schema + service + query hook + component + test) for ONE narrow path. Pairs with the ~100-LOC cap. Best when the layer-stack is well-understood and the risk is in the integration.
+- **Vertical (default — tracer bullet).** Each slice cuts through every layer end-to-end for ONE narrow path — schema + API client + query hook + component + test. Pairs with the ~100-LOC cap. Best when the layer-stack is well-understood and the risk is in the integration.
 - **Risk-first.** When there's irreducible technical risk (new external integration, novel concurrency pattern, unproven library), make the first slice prove just the risky piece. If it fails, you discover it before sinking effort into Slices 2..N. Subsequent slices build on the proven path.
-- **Contract-first.** When a public API or module boundary is being introduced, **Slice 0 = define the contract** (types / interface / OpenAPI surface). Then Slice 1+ implements behind the contract; consumers can develop in parallel against the same shape. Best fit for new feature contracts the BFF/API will consume.
+- **Contract-first.** When a public API or module boundary is being introduced, **Slice 0 = define the contract** (the endpoint's types and API-client signature). Then Slice 1+ implements behind the contract; consumers can develop in parallel against the same shape. Best fit for consuming a new API endpoint — define the types and client first, then the query hooks, then the components.
 
-State the choice in the plan output (e.g., `Slicing: contract-first — Slice 0 defines the DTOs and route signatures; Slice 1 implements the hook`). The reviewer (`architect-reviewer`) checks whether the choice matches the actual risk profile.
+State the choice in the plan output (e.g., `Slicing: contract-first — Slice 0 defines the endpoint types and client signature; Slice 1 implements the hook`). The reviewer (`architect-reviewer`) checks whether the choice matches the actual risk profile.
 
 ### Step sizing — tracer-bullet vertical slices (~100 LOC cap)
 
-Each step is a **tracer-bullet vertical slice**: a thin path that cuts through every layer (schema → service → query hook → component → test) end-to-end, NOT a horizontal slice of one layer. A completed slice is demoable or verifiable on its own. Implementable, testable, and committable on its own. Target ≤ ~100 LOC of executable code per step (tests excluded from the count). If a step's implementation crosses ~100 LOC mid-execution, **STOP, commit what's working, and split the rest into a new step.** Don't push through.
+Each step is a **tracer-bullet vertical slice**: a thin path that cuts through every layer end-to-end (schema → API client → query hook → component → test), NOT a horizontal slice of one layer. A completed slice is demoable or verifiable on its own. Implementable, testable, and committable on its own. Target ≤ ~100 LOC of executable code per step (tests excluded from the count). If a step's implementation crosses ~100 LOC mid-execution, **STOP, commit what's working, and split the rest into a new step.** Don't push through.
 
 The cap is a discipline mechanism, not a hard rule — a 130-LOC step that's genuinely cohesive is fine; a 250-LOC step that's "just three small things" is the failure mode. The split-and-commit reflex catches big-bang implementations that drift from the plan and produce un-reviewable diffs.
 

@@ -1,6 +1,10 @@
 ---
 name: tdd-workflow
-description: Use ALWAYS when implementing, modifying, or fixing executable code (features, bug fixes, refactors, integrations, performance work, type changes affecting runtime). Use even for "small" or "obvious" changes. NOT for documentation, content drafts, SQL reads, JQL queries, slide decks, config-only changes without behavior impact, plain explanations.
+description: Use ALWAYS when implementing, modifying, or fixing executable code (features, bug fixes, refactors, integrations, performance work, type changes affecting runtime) — anywhere in the app. Use even for "small" or "obvious" changes. NOT for documentation, content drafts, SQL reads, JQL queries, slide decks, config-only changes without behavior impact, plain explanations.
+harness:
+  tier: shared
+  family: process
+  gist: "Failing test first, the waiver phrases, the test-quality rubric"
 ---
 
 # TDD Workflow
@@ -61,10 +65,10 @@ Before declaring the change complete, verify (in order):
 - **Requirement coverage.** Every requirement / acceptance criterion has at least one passing test or an explicit waiver.
 - **Assumptions validated.** Every assumption stated up front is either confirmed by the code/tests or recorded as a known risk in the response.
 - **Every changed line traces to the request.** No drive-by edits.
-- **Errors are actionable** (typed, contextual, redacted). Use the framework's error/exception types per `repo-conventions`, not plain `Error`.
-- **Backward compatibility preserved** unless the user explicitly told you otherwise.
+- **Errors are actionable** (typed, contextual, redacted). Use the framework's error/exception types per `repo-conventions`, not plain `Error` — that means typed errors surfaced through the UI (error boundary, toast, form error state).
+- **Backward compatibility preserved** unless the user explicitly told you otherwise. For changes to shared types, a breaking type change is a backward-compat concern for every consumer in the codebase — confirm both the producer and the consumers are updated.
 - **Security / performance flags raised explicitly** when applicable: new auth surface, new external call, new SQL, new big-O hot path. If none apply, state "no security/perf flags raised."
-- **Confidence ≥ 0.9** per the rubric in `CLAUDE.md` P8.1. If lower, revise the weakest area before declaring done.
+- **The P8.1 verification line is honestly satisfiable.** The relevant suite(s) ran HERE and were green (cite the command), every triggered reviewer returned a verdict, and remaining gaps are named under `open risks:` — if a load-bearing item is missing, revise before declaring done rather than omitting it from the line.
 
 The design-principles check is delegated to `design-review`; do not duplicate it here.
 
@@ -112,7 +116,7 @@ A test that *passes* is necessary; a test that's *good* is what catches regressi
 
 9. **Tests one error path explicitly.** For every non-trivial failure mode (validation failure, downstream timeout, conflict, scope mismatch), have a test that triggers it and asserts on the surfaced error. "It should throw" is not enough — assert on the *kind* of error.
    - **Bad:** `expect(() => fn(bad)).toThrow()`.
-   - **Good:** assert on the framework error type the code surfaces (e.g., a thrown `Error` with a specific message, an HTTP status, an error-boundary fallback rendering, a toast call). See `repo-conventions` for which surface this codebase uses.
+   - **Good:** assert on the user-visible failure surface — an HTTP status the data layer maps, an error-boundary fallback rendering, or a toast call. See `repo-conventions` for which surface this codebase uses.
 
 10. **Lives next to the code, named consistently.** Match the project's convention for test file location and suffix. If the codebase uses `*.spec.ts`, don't introduce `*.test.ts`.
 

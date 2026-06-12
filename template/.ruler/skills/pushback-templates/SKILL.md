@@ -1,6 +1,10 @@
 ---
 name: pushback-templates
 description: Use when about to push back on the user — when a simpler in-scope alternative is visible, when scope appears to be creeping, when a hidden risk is detected, or when you genuinely disagree with the framing of the request. Provides full templates with phrasing variants and example dialogues. NOT for normal conversation, agreement situations, or factual questions.
+harness:
+  tier: shared
+  family: process
+  gist: "How to disagree: observation, tradeoff, question — one round"
 ---
 
 # Pushback Templates
@@ -72,6 +76,8 @@ You: "Before I implement: a global flag store is one path, but the flags come fr
 
 User: *"Fix the bug in `useProjects` where it's returning archived projects."*
 You: "This change as described would also touch the consuming components — `useProjects` currently returns the raw query result, and `ProjectsList` is expecting unfiltered. Two options: (1) fix the query-level filter only, ship, and check whether any caller relies on the unfiltered behavior as a follow-up; (2) update the hook + the list rendering + the e2e in one change. Which?"
+
+> If the bug touches an API contract type (a shape shared with the backend), name the seam explicitly: a contract change is a backward-compat concern for BOTH this app and the sibling backend repo (see `cross-repo-workspace`), so the scope discussion must cover both sides.
 
 ### 3. Hidden risk
 
