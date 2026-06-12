@@ -1,0 +1,302 @@
+{
+ "comment": "Canonical (prompt → expected discretionary skills) routing cases, scored by a live model. Expected lists name DISCRETIONARY skills only — P3.4 force-fire skills may appear in output and are never penalized. `variants` are paraphrases: a case scores its WORST variant (stability, not just success). `expected: []` cases are NEGATIVE: loading any non-force-fire skill is a false positive.",
+ "cases": [
+  {
+   "id": "feat-route",
+   "prompt": "Add a new protected route that fetches user profile data and shows a loading state",
+   "expected": [
+    "react-routing",
+    "react-data-fetching",
+    "react-state-management"
+   ],
+   "variants": [
+    "Build a members-only page that loads the signed-in user's profile from the API, with a spinner while it loads",
+    "New screen behind login: pull profile data from the server and handle the waiting state"
+   ]
+  },
+  {
+   "id": "feat-form",
+   "prompt": "Add a new signup form with email validation and async submit error handling",
+   "expected": [
+    "react-forms",
+    "async-error-handling"
+   ],
+   "variants": [
+    "Create a registration form — validate the email field and handle submit failures from the server",
+    "We need a sign-up form: schema validation on email plus error handling when the async submit rejects"
+   ]
+  },
+  {
+   "id": "perf-rerender",
+   "prompt": "Investigate why this component rerenders on every keystroke and reduce the rerender cost",
+   "expected": [
+    "react-performance"
+   ],
+   "variants": [
+    "Typing in this input feels laggy — every keypress seems to redraw the whole component tree",
+    "Figure out why this widget repaints constantly while the user types and make it cheaper"
+   ]
+  },
+  {
+   "id": "perf-bundle",
+   "prompt": "Add a new dependency for date formatting and check the bundle size impact",
+   "expected": [
+    "bundle-size"
+   ]
+  },
+  {
+   "id": "a11y-dialog",
+   "prompt": "Add a confirmation dialog with keyboard navigation and focus management",
+   "expected": [
+    "accessibility"
+   ]
+  },
+  {
+   "id": "sec-xss",
+   "prompt": "Render user-submitted markdown safely without enabling raw HTML injection",
+   "expected": [
+    "frontend-security"
+   ]
+  },
+  {
+   "id": "sec-tokens",
+   "prompt": "Review how the auth token is stored and whether localStorage exposure is acceptable",
+   "expected": [
+    "frontend-security"
+   ],
+   "variants": [
+    "Is keeping the JWT in localStorage fine, or should we move it? Audit our token storage",
+    "Where should the session token live on the client? Review the current storage approach"
+   ]
+  },
+  {
+   "id": "route-guard",
+   "prompt": "Add an admin-only route that redirects unauthenticated users to /login",
+   "expected": [
+    "react-routing",
+    "frontend-security"
+   ]
+  },
+  {
+   "id": "test-component",
+   "prompt": "Write a Vitest test for this component using Testing Library queries",
+   "expected": [
+    "react-testing",
+    "vitest"
+   ]
+  },
+  {
+   "id": "test-e2e",
+   "prompt": "Write a Playwright test that walks the login flow including OAuth redirect handling",
+   "expected": [
+    "playwright-best-practices"
+   ]
+  },
+  {
+   "id": "bug-failing-test",
+   "prompt": "This test is failing intermittently in CI — investigate the root cause",
+   "expected": [
+    "bug-investigation"
+   ],
+   "variants": [
+    "CI is red on and off for the same spec — sometimes green, sometimes not. Find out why",
+    "This spec flakes in the pipeline; track down the real cause before touching anything"
+   ]
+  },
+  {
+   "id": "plan-feat",
+   "prompt": "Plan a refactor that splits the chat feature into three smaller modules",
+   "expected": [
+    "plan-mode"
+   ]
+  },
+  {
+   "id": "adr-decision",
+   "prompt": "We need to decide between Zustand and Jotai for the new feature; document the rationale",
+   "expected": [
+    "documentation-and-adrs",
+    "decision-rules"
+   ],
+   "variants": [
+    "Zustand or Jotai for the new feature's state? We need the choice written down with reasons",
+    "Pick between two state libraries and record why, so the decision survives the team"
+   ]
+  },
+  {
+   "id": "ts-generics",
+   "prompt": "Define a type-safe generic hook with conditional return types based on the input shape",
+   "expected": [
+    "typescript-advanced-types"
+   ]
+  },
+  {
+   "id": "async-patterns",
+   "prompt": "Refactor this Promise.all to allow partial failures using Promise.allSettled with AbortSignal",
+   "expected": [
+    "async-error-handling"
+   ]
+  },
+  {
+   "id": "complexity-nested",
+   "prompt": "Flatten the nested conditionals in this function using guard clauses and early returns",
+   "expected": [
+    "cyclomatic-complexity"
+   ]
+  },
+  {
+   "id": "perf-hotpath",
+   "prompt": "Optimize this hot loop for large datasets and high-frequency events",
+   "expected": [
+    "js-performance-patterns"
+   ]
+  },
+  {
+   "id": "refactor-cleanup",
+   "prompt": "Simplify the code I just modified for clarity and consistency, preserving behavior",
+   "expected": [
+    "code-simplifier"
+   ]
+  },
+  {
+   "id": "skill-audit",
+   "prompt": "Review the skill library quality and check for misfiring or overlapping skills",
+   "expected": [
+    "meta-skill-hygiene"
+   ]
+  },
+  {
+   "id": "git-pr",
+   "prompt": "Commit the changes and open a pull request against main",
+   "expected": [
+    "git-workflow"
+   ]
+  },
+  {
+   "id": "pushback",
+   "prompt": "I want to introduce a new state library for this one widget — talk me out of it if that's wrong",
+   "expected": [
+    "pushback-templates",
+    "decision-rules"
+   ]
+  },
+  {
+   "id": "quality-gate",
+   "prompt": "Set up the CI pipeline and pre-commit hooks to run typecheck, lint, and tests on every pull request",
+   "expected": [
+    "quality-gates"
+   ],
+   "variants": [
+    "Wire up GitHub Actions plus a pre-commit hook so lint, types, and tests run before anything merges",
+    "Every PR should be blocked unless typecheck, lint, and the suites pass — set that up"
+   ]
+  },
+  {
+   "id": "rlm",
+   "prompt": "I'm new to this repo — help me understand the chat feature's architecture",
+   "expected": [
+    "rlm-explore"
+   ]
+  },
+  {
+   "id": "cross-repo-feat",
+   "prompt": "Add a /users/me endpoint in the backend repo and a useMe() hook in the frontend repo using TanStack Query with caching and optimistic updates",
+   "expected": [
+    "cross-repo-workspace",
+    "react-data-fetching"
+   ],
+   "variants": [
+    "The API lives in one repo and the SPA in another — add the endpoint there and the consuming hook here",
+    "Coordinate a feature across our two repositories: backend route in repo A, frontend query hook in repo B"
+   ]
+  },
+  {
+   "id": "spec-first",
+   "prompt": "Add CSV export to the reports page — write the spec for it before any code",
+   "expected": [
+    "spec-workflow"
+   ]
+  },
+  {
+   "id": "tailwind-theme",
+   "prompt": "Set up dark mode theming with Tailwind v4 CSS variables for our shadcn components",
+   "expected": [
+    "tailwind-v4-shadcn"
+   ]
+  },
+  {
+   "id": "neg-explain-error",
+   "prompt": "What does this error mean: TypeError: Cannot read properties of undefined (reading 'map')?",
+   "expected": []
+  },
+  {
+   "id": "neg-explain-regex",
+   "prompt": "Explain what this regex does: ^(?=.*[A-Z])(?=.*\\d).{8,}$",
+   "expected": []
+  },
+  {
+   "id": "neg-concept",
+   "prompt": "What's the difference between optimistic and pessimistic locking, conceptually?",
+   "expected": []
+  },
+  {
+   "id": "neg-translate",
+   "prompt": "Translate this code comment to English: // calcula el total de la factura",
+   "expected": []
+  },
+  {
+   "id": "neg-math",
+   "prompt": "If each request takes 120ms, how many can one worker serve per minute?",
+   "expected": []
+  },
+  {
+   "id": "neg-explain-diff",
+   "prompt": "Walk me through what this diff changes, in plain words",
+   "expected": []
+  },
+  {
+   "id": "neg-naming",
+   "prompt": "Is 'UserDataManager' a good class name? Just your opinion",
+   "expected": []
+  },
+  {
+   "id": "neg-history",
+   "prompt": "Who introduced the term 'dependency injection'?",
+   "expected": []
+  },
+  {
+   "id": "conf-bundle-not-perf",
+   "prompt": "The app takes much longer to load since we added three chart libraries — figure out why",
+   "expected": [
+    "bundle-size"
+   ]
+  },
+  {
+   "id": "conf-perf-not-bundle",
+   "prompt": "The bundle is tiny but typing in the search box still lags badly",
+   "expected": [
+    "react-performance"
+   ]
+  },
+  {
+   "id": "design-patterns",
+   "prompt": "Refactor this feature to use the provider pattern with a compound component composition",
+   "expected": [
+    "react-design-patterns"
+   ]
+  },
+  {
+   "id": "vite-config",
+   "prompt": "Configure path aliases and tune the dev server proxy in the Vite build config",
+   "expected": [
+    "vite"
+   ]
+  },
+  {
+   "id": "shadcn-add",
+   "prompt": "Add a shadcn dialog component and wire it into the settings page",
+   "expected": [
+    "shadcn"
+   ]
+  }
+ ]
+}
