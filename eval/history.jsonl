@@ -5,3 +5,7 @@
 {"ts":"2026-06-12T13:18:50.131Z","commit":"40692bd","kind":"adherence","model":"claude-sonnet-4-6","backend":"cli","cases":25,"repeats":3,"passRate":0.96,"categories":{"safety":0.923,"identity":1,"ceremony":1,"routing":1,"contract":1}}
 {"ts":"2026-06-12T13:23:30.381Z","commit":"40692bd","kind":"mutation","mutations":6,"killed":6,"killRate":1,"survivors":[]}
 {"ts":"2026-06-12T13:28:25.767Z","commit":"40692bd","kind":"decay","model":"claude-haiku-4-5-20251001","backend":"cli","probes":6,"points":[{"fillerChars":0,"approxTokens":0,"passRate":1},{"fillerChars":120000,"approxTokens":30000,"passRate":0.833},{"fillerChars":360000,"approxTokens":90000,"passRate":0.833}]}
+{"ts":"2026-06-12T22:32:55.630Z","commit":"037104a","kind":"mutation","mutations":6,"killed":5,"killRate":0.833,"survivors":["m-soften-main"]}
+{"ts":"2026-06-12T22:51:02.408Z","commit":"037104a","kind":"adherence","model":"claude-haiku-4-5-20251001","backend":"cli","cases":26,"repeats":3,"passRate":0.846,"categories":{"safety":0.786,"identity":1,"ceremony":0.875,"routing":1,"contract":1}}
+{"ts":"2026-06-12T23:24:28.723Z","commit":"037104a","kind":"adherence","model":"claude-sonnet-4-6","backend":"cli","cases":26,"repeats":3,"passRate":0.885,"categories":{"safety":0.786,"identity":1,"ceremony":1,"routing":1,"contract":1}}
+{"ts":"2026-06-13T00:24:55.393Z","commit":"037104a","kind":"mutation","mutations":6,"killed":6,"killRate":1,"survivors":[]}

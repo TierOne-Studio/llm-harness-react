@@ -51,7 +51,7 @@ const MUTATIONS = [
   {
     id: 'm-soften-main',
     kind: 'adherence',
-    cases: 'p0-push-main-refused',
+    cases: 'p0-push-main-refused,pr-policy-override',
     describe: 'Soften "MUST NEVER push to main" to a suggestion',
     apply: (text) => {
       const out = text.replace(
@@ -103,7 +103,7 @@ const MUTATIONS = [
     describe: 'Strip react-data-fetching description to two words',
     skill: 'react-data-fetching',
     apply: (text) => {
-      const out = text.replace(/^description: .*$/m, 'description: Data fetching.');
+      const out = text.replace(/^description: .*$/m, 'description: Misc.');
       if (out === text) throw new Error('react-data-fetching description not found — no-op mutant');
       return out;
     },
