@@ -1,6 +1,10 @@
 ---
 name: meta-skill-hygiene
 description: Use when reviewing the skill library for quality — typically monthly, after 5+ approved curator proposals, or when skills feel like they're misfiring or overlapping. NOT a routine skill. NOT for adding individual skills (that's lessons-curator). Invoke deliberately for an audit.
+harness:
+  tier: shared
+  family: process
+  gist: "Auditing this skill library itself (overlap, bloat, size ceilings)"
 ---
 
 # Meta-Skill Hygiene
@@ -28,7 +32,7 @@ Skill body has grown past ~200 lines or contains content that's actually CLAUDE.
 
 Fix: extract to the right layer.
 
-**~500-line split threshold.** When a SKILL.md exceeds ~500 lines, the skill is too dense to be loaded efficiently — split into a directory with this layout:
+**~500-line split threshold.** When a SKILL.md exceeds ~500 lines, the skill is too dense to be loaded efficiently — split into a directory with this layout (canonical examples: a patterns-directory skill like `react-design-patterns/`, or a multi-directory skill like `playwright-best-practices/`):
 
 ```
 skill-name/
@@ -38,11 +42,13 @@ skill-name/
 ├── patterns/          ← named sub-patterns the entry point routes to
 │   ├── pattern-a.md
 │   └── pattern-b.md
-└── rules/             ← when the skill is rule-catalog-shaped
+└── rules/             ← when the skill is rule-catalog-shaped (e.g., a rule catalog like `shadcn`)
     └── rule-name.md
 ```
 
 The parent SKILL.md tells the agent which sub-file to load for which situation; the model loads only what's relevant. Don't pre-emptively split — apply this when the skill genuinely passes ~500 lines OR when distinct sub-shapes (patterns, rules, references) emerge.
+
+**Enforced ceiling.** The template's acceptance suite (`tests/run-acceptance.sh` T13) WARNs at >400 lines per SKILL.md and FAILS at >800 — a monolith past that point must be split before it ships. Index-style skills pass trivially; the budget is on the always-loaded entry point, not the on-demand topic files.
 
 ### 4. Contradictions
 
@@ -59,11 +65,11 @@ Fix: rewrite trigger or remove.
 
 ### 7. CLAUDE.md cross-coupling (Layered-router principle)
 
-CLAUDE.md is a pure router — it points to skills and subagents but does NOT enumerate Layer-3 artifacts. The principle is owned by `documentation-and-adrs` § "Layered-router principle". Audit drift:
+CLAUDE.md is a pure router — it points to skills and subagents but does NOT enumerate Layer-3 artifacts. The principle is owned by `documentation-and-adrs` § "Layered-router principle" and enforced by acceptance test T74. Audit drift:
 
 - Scan CLAUDE.md for `ADR-[0-9]{3}` regex matches → flag MED, propose moving citation to `repo-conventions` ADR table or the relevant meta-skill.
 - Scan for file paths (`src/`, `docs/`, `.claude/skills/`, `.claude/agents/`) → flag MED.
-- Scan for code symbols (decorators, class names, function names like `<RouteGuard>`, `useAuth()`) → flag MED. Boundary case: literal command tokens that ARE the rule (`git push`, `INSERT`, AI-attribution trailer strings) are allowed because the rule literally matches those strings.
+- Scan for code symbols (components/hooks like `<RouteGuard>`, `useAuth()`, class names like `SomeGuard`, function names like `someHelper`) → flag MED. Boundary case: literal command tokens that ARE the rule (`git push`, `INSERT`, AI-attribution trailer strings) are allowed because the rule literally matches those strings.
 - Scan for subagent internal step references (e.g., "see code-reviewer Step 5") → flag LOW.
 
 Fix: move the citation into the relevant skill or subagent file; CLAUDE.md keeps only the skill/subagent name. Each artifact citation lives in exactly one place.

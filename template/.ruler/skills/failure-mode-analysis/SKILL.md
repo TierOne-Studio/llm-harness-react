@@ -1,6 +1,10 @@
 ---
 name: failure-mode-analysis
 description: Use TWICE on non-trivial changes — first during `plan-mode` Step 0 (to anticipate the top 2–3 failure modes that should shape the API design), then again BEFORE writing the failing test in tdd-workflow Step 1 (full enumeration of failure modes — null, empty, large, race, partial, network, malformed, boundary — to decide which tests to write). NOT for trivial single-line edits, type-only changes, documentation, or non-code work.
+harness:
+  tier: shared
+  family: process
+  gist: "Edge cases enumerated BEFORE the failing test"
 ---
 
 # Failure-Mode Analysis

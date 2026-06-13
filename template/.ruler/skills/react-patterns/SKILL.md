@@ -1,11 +1,15 @@
 ---
 name: react-patterns
-description: Use ALWAYS when implementing or reviewing React components, hooks, or rendering logic in this SPA. Covers component shape (function components only, default vs named export, controlled vs uncontrolled, lifting state), hook discipline (rules-of-hooks, dependency arrays, cleanup, custom-hook extraction), refs vs state, list keys, and the boundaries between presentation, state, and data layers. NOT for state-placement decisions (use `react-state-management`), data-fetching (use `react-data-fetching`), routing (use `react-routing`), forms (use `react-forms`), or rendering performance (use `react-performance` / `react-render-optimization`).
+description: Use ALWAYS when implementing or reviewing React components, hooks, or rendering logic in this SPA. Covers component shape (function components only, default vs named export, controlled vs uncontrolled, lifting state), hook discipline (rules-of-hooks, dependency arrays, cleanup, custom-hook extraction), refs vs state, list keys, and the boundaries between presentation, state, and data layers. NOT for state-placement decisions (use `react-state-management`), data-fetching (use `react-data-fetching`), routing (use `react-routing`), forms (use `react-forms`), or rendering performance (use `react-performance`).
+harness:
+  tier: frontend
+  family: react-core
+  gist: "Components, hooks, lifting state, refs, lists"
 ---
 
 # React Patterns
 
-The grounding skill for React component and hook design in this SPA. Forced-fire on every change touching `.tsx`/component logic. Pair with `repo-conventions` for repo-specific layout and `react-composition-2026` for modern composition idioms.
+The grounding skill for React component and hook design in this SPA. Forced-fire on every change touching `.tsx`/component logic. Pair with `repo-conventions` for repo-specific layout and `react-2026` for modern composition idioms.
 
 ## When this fires
 
@@ -16,7 +20,7 @@ The grounding skill for React component and hook design in this SPA. Forced-fire
 
 ## When this does NOT fire
 
-- Pure utility / non-React module work (use `module-pattern`).
+- Pure utility / non-React module work (use `react-design-patterns/patterns/module.md`).
 - State-placement decisions (use `react-state-management`).
 - Routing-shape decisions (use `react-routing`).
 
@@ -50,9 +54,9 @@ The grounding skill for React component and hook design in this SPA. Forced-fire
 
 ## Patterns to use
 
-- **Compound components** for related UI that shares implicit state (tabs, accordions, dropdown menu). See `compound-pattern`.
-- **Provider** for cross-tree concerns scoped to a feature (theme, auth context). See `provider-pattern`.
-- **Presentational/container split** when one component has both fetching and rendering responsibilities and tests are awkward. See `presentational-container-pattern`.
+- **Compound components** for related UI that shares implicit state (tabs, accordions, dropdown menu). See `react-design-patterns/patterns/compound.md`.
+- **Provider** for cross-tree concerns scoped to a feature (theme, auth context). See `react-design-patterns/patterns/provider.md`.
+- **Presentational/container split** when one component has both fetching and rendering responsibilities and tests are awkward. See `react-design-patterns/patterns/presentational-container.md`.
 - **Custom hook + presentational component** is the modern equivalent of the container/presentational split — keep the data hook in `hooks/` and the visual component in `components/`. See `repo-conventions` § Feature folder structure.
 
 ## Anti-patterns

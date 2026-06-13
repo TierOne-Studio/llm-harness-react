@@ -1,6 +1,10 @@
 ---
 name: bug-investigation
 description: Use when given a bug report, failing test, CI failure, production incident, or "it's broken" task. NOT for new features, refactors not driven by a defect, design work, or routine code reviews.
+harness:
+  tier: shared
+  family: process
+  gist: "Ranked falsifiable hypotheses before any fix"
 ---
 
 # Bug Investigation
@@ -83,13 +87,14 @@ When the symptom is unclear about which layer is failing:
 
 ```
 Where does the failure surface?
-├── HTTP / API client / public API   → check request log, response body, route guard
-├── UI / component / hook            → check rendered DOM, props, state, effect deps
-├── Service / domain logic           → check service-method inputs, intermediate values
-├── Repository / database            → check the executed SQL, parameters, transaction boundary
-├── Build / tooling / CI             → check config, dependencies, env vars, runner version
-├── External service                 → check connectivity, rate limits, contract-compliance, recent vendor changes
-└── The test itself                  → false negative: is the test actually correct? (See `tdd-workflow` rubric item 1 — rename test diagnostic.)
+├── HTTP / controller / API client / public API  → check request log, response body, route guard
+├── UI / component / hook                         → check rendered DOM, props, state, effect deps
+├── API contract / type                           → check the types/schemas the app expects against what the backend actually returns for a breaking change reflected on only one side
+├── Service / domain logic                        → check service-method inputs, intermediate values
+├── Repository / database                         → check the executed SQL, parameters, transaction boundary
+├── Build / tooling / CI                          → check config, dependencies, env vars, runner version
+├── External service                              → check connectivity, rate limits, contract-compliance, recent vendor changes
+└── The test itself                               → false negative: is the test actually correct? (See `tdd-workflow` rubric item 1 — rename test diagnostic.)
 ```
 
 ### Bisect for regressions

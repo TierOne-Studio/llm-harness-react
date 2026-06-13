@@ -1,6 +1,10 @@
 ---
 name: accessibility
 description: Use ALWAYS when changing UI markup, interactive elements, dialogs, menus, forms, or anything keyboard-reachable. Covers semantic HTML, ARIA only when needed, focus management on route change and dialog open/close, keyboard navigation, color contrast, screen-reader-only text, and axe checks. NOT for tests of non-UI logic, pure data layers, or build-tool config. Force-fire on any UI diff per CLAUDE.md P3.4.
+harness:
+  tier: frontend
+  family: frontend-platform
+  gist: "Semantic HTML, ARIA, focus & keyboard rules for UI changes"
 ---
 
 # Accessibility

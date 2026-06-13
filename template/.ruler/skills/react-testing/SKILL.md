@@ -1,6 +1,10 @@
 ---
 name: react-testing
 description: Use when writing or reviewing tests for React code in this SPA — Vitest unit/component tests, Testing Library queries (priority order role > label > placeholder > test-id), `userEvent` interactions, async assertions, hook tests with wrappers, and the unit-vs-component-vs-e2e split. Pairs with `playwright-best-practices` for E2E patterns. NOT for non-React tests, e2e mechanics in detail, or the TDD process itself (use `tdd-workflow`).
+harness:
+  tier: frontend
+  family: react-core
+  gist: "Vitest + Testing Library + Playwright layer choice"
 ---
 
 # React Testing
@@ -38,9 +42,9 @@ A common React test stack is Vitest + Testing Library for unit/component tests a
 
 3. **`async` queries for async UI.** `findByRole`, `findByText` retry until the element appears. Use them when state changes after a `userEvent` (mutation, query loading, dialog open). NEVER add arbitrary `await new Promise(r => setTimeout(r, X))` — that's flakiness.
 
-4. **No assertions on internals.** No `expect(component.state.x).toBe(...)`. Test what the user sees: rendered text, ARIA attributes, tab order, role hierarchy.
+4. **No assertions on internals.** No `expect(component.state.x).toBe(...)`. Test what the user sees: rendered text, ARIA attributes, tab order, role hierarchy. Canonical principle + the rename-test diagnostic: `tdd-workflow` test-quality rubric item 1.
 
-5. **Mocks at boundaries only.** Mock the API client, the router, `useAuth`, `localStorage`, the third-party SDK. Don't mock the component under test or its internal helpers.
+5. **Mocks at boundaries only.** Mock the API client, the router, `useAuth`, `localStorage`, the third-party SDK. Don't mock the component under test or its internal helpers. Canonical boundary-mocking principle (incl. SDK-style interfaces): `tdd-workflow` rubric item 7.
 
 ## Patterns
 

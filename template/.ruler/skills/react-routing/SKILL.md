@@ -1,6 +1,10 @@
 ---
 name: react-routing
 description: Use when adding, modifying, or reviewing routes in this SPA — including route definitions, nested layouts, route guards (auth + RBAC), redirected/expired-session flows, code splitting per route, search-param state, and route-level error boundaries. NOT for general component layout (use `react-patterns`), data-fetching inside a route (use `react-data-fetching`), or auth-token storage (use `frontend-security`).
+harness:
+  tier: frontend
+  family: react-core
+  gist: "Routes, guards, expired-session flow, code-split per route"
 ---
 
 # React Routing (React Router 7)

@@ -1,6 +1,10 @@
 ---
 name: async-error-handling
-description: Use when writing or reviewing async code in JavaScript/TypeScript — Promise composition (Promise.all/allSettled/race), error propagation, AbortSignal/timeouts, top-level handlers, where to catch vs let propagate. Applies to React data fetching, hooks, event handlers, and the few non-React async paths in the SPA. NOT for synchronous code, framework-internal lifecycle handlers, or simple sequential awaits with no error-flow decision.
+description: Use when writing or reviewing async code in JavaScript/TypeScript (browser or Node.js) — Promise composition (Promise.all/allSettled/race), error propagation, AbortSignal/timeouts, top-level handlers, where to catch vs let propagate. Applies to React data fetching, hooks, event handlers, and the few non-React async paths in the app. NOT for synchronous code, framework-internal lifecycle handlers, or simple sequential awaits with no error-flow decision.
+harness:
+  tier: shared
+  family: language
+  gist: "Promise composition, AbortSignal, where to catch"
 ---
 
 # Async Error Handling
@@ -10,7 +14,7 @@ The most LLM-error-prone area in JS/TS. The default model habits — wrapping ev
 ## When this fires
 
 - Composing parallel async work (`Promise.all`, `Promise.allSettled`, `Promise.race`).
-- Calling external services (HTTP, auth) where partial failure is possible.
+- Calling external services (HTTP, auth, DB) where partial failure is possible.
 - Implementing timeouts, cancellation, or backpressure.
 - Choosing where in a layered call chain to catch a specific error.
 - Reviewing existing async code for silent-failure or wrong-layer-catch issues.
@@ -24,15 +28,15 @@ The most LLM-error-prone area in JS/TS. The default model habits — wrapping ev
 
 ## Core rules (override LLM defaults)
 
-1. **Throw, don't return null.** Returning `null` to signal failure forces every caller to check, drops error context, and violates explicitness. Throw a typed `Error` (or framework-typed exception per `repo-conventions`); let TanStack Query / the error boundary / the toast handler surface it.
+1. **Throw, don't return null.** Returning `null` to signal failure forces every caller to check, drops error context, and violates explicitness. Throw a typed `Error` (or framework-typed exception per `repo-conventions`) and let TanStack Query / the error boundary / the toast handler surface it.
 
 2. **Catch at the boundary, not at every layer.** A service throws → the query/mutation hook lets it propagate → TanStack Query surfaces `error` via its return value → the consuming component renders an error state. Catching mid-stack only to rethrow is noise.
 
 3. **Never catch-and-ignore.** `try { ... } catch {}` is forbidden. If you genuinely don't care about the error, log at `warn` with context AND comment why ignoring is correct.
 
-4. **No retries.** The caller decides retry policy; let the failure propagate with timing/URL/status context. TanStack Query has its own retry config — set it intentionally (e.g., `retry: false` for mutations) instead of wrapping fetches in custom retry loops.
+4. **No retries.** Per CLAUDE.md P5. The caller decides retry policy; let the failure propagate with timing/URL/status context. TanStack Query has its own retry config — set it intentionally (e.g., `retry: false` for mutations) instead of wrapping fetches in custom retry loops.
 
-5. **Fail fast at boundaries.** Validate inputs at the form / route entry; surface invalid state early. Don't let bad data flow into the data layer and crash unexpectedly.
+5. **Fail fast at boundaries.** Validate inputs at the entry point — the form / route entry; surface invalid state early. Don't let bad data flow into the domain / data layer and crash unexpectedly.
 
 ## Promise composition (decision tree)
 
@@ -63,6 +67,8 @@ for (const item of items) {
 
 ### Common LLM mistake: `Promise.all` when one rejection is acceptable
 
+Fanning out over independent data sources to build one view:
+
 ```ts
 // ❌ Fetching from N data sources; one failure kills the whole render
 const results = await Promise.all(sources.map(s => s.search(query)))
@@ -75,7 +81,7 @@ if (failed.length > 0) console.warn('partial source failure', { failedCount: fai
 return ok
 ```
 
-This pattern fits any fan-out over independent sources (e.g. firing several API calls in parallel to build one view): one slow or failing source shouldn't blank the whole result.
+This pattern fits any fan-out over independent sources (e.g. firing several API calls in parallel to build one view, or querying several data sources and merging results): one slow or failing source shouldn't blank the whole result.
 
 ## Try/catch placement: at the boundary
 
@@ -111,7 +117,7 @@ if (error) return <ErrorState error={error} />
 
 - **Transform** — catch low-level error, throw a higher-level one with more context.
 - **Recover** — catch a specific failure mode and substitute a fallback (rare; prove the fallback is correct).
-- **Boundary fan-in** — at a chat-agent or API-aggregator level, mapping multiple kinds of upstream errors to a uniform response.
+- **Boundary fan-in** — at a chat-agent, API-aggregator, or API-gateway level, mapping multiple kinds of upstream errors to a uniform response.
 - **User-action handler** — in a `<button onClick>` async handler, you typically `try { await mutate(...); toast.success(...) } catch (e) { toast.error(...) }` because the boundary IS the click handler.
 
 ### Forbidden reasons to catch
@@ -123,7 +129,7 @@ if (error) return <ErrorState error={error} />
 
 ## Timeouts and cancellation
 
-Use `AbortSignal.timeout(ms)` for outbound calls. Propagate the signal so cancellation cascades. TanStack Query passes a `signal` to `queryFn` automatically — wire it through.
+Use `AbortSignal.timeout(ms)` (Node 18+ / modern browsers) for outbound calls. Propagate the signal so cancellation cascades. TanStack Query passes a `signal` to `queryFn` automatically — wire it through.
 
 ```ts
 async function fetchProject({ signal }: QueryFunctionContext) {
@@ -147,18 +153,20 @@ await fetch(url, { signal: AbortSignal.timeout(5000) })
 
 ## Top-level handlers
 
-Browsers crash with an `unhandledrejection` event by default. **Don't add a global `unhandledrejection` listener to swallow them — that defeats the safety.** Wire a real error monitor (Sentry, Bugsnag) at the app boundary if you need observability; for now, let the dev console surface them. React's error boundary handles render-time errors; for async work outside the render tree (e.g., a `setInterval` callback you've added to global state), wrap the callback body in try/catch and decide.
+The runtime crashes on unhandled rejections by default — browsers fire an `unhandledrejection` event, Node 15+ exits the process. **Don't add a global handler (`window.addEventListener('unhandledrejection', ...)` in the browser, `process.on('unhandledRejection', ...)` in Node) just to swallow them — that defeats the safety.**
+
+Wire a real error monitor (Sentry, Bugsnag) at the app boundary if you need observability; otherwise let the dev console surface them. React's error boundary handles render-time errors; for async work outside the render tree (e.g., a `setInterval` callback you've added to global state), wrap the callback body in try/catch and decide.
 
 ## Common LLM mistakes (catch these in `code-reviewer`)
 
 1. **Defensive try/catch around every await.** Each one obliterates typed errors. Catch only when transforming or recovering or at the user-action boundary.
-2. **Returning `null` on failure.** Throw with context.
+2. **Returning `null` on failure.** Throw a typed `Error` with context.
 3. **`await` inside `.map()` thinking it's sequential.** It runs in parallel.
 4. **`.forEach(async ...)`.** Doesn't await — fire-and-forget. Use `for-of` or `Promise.all(map)`.
 5. **`Promise.all` when partial-success is acceptable.** Use `Promise.allSettled`.
 6. **Custom timeout via `Promise.race`.** Use `AbortSignal.timeout()`.
-7. **Catching to log then re-throw.** The boundary handles it. The catch does nothing.
-8. **Adding retries.** If your data-fetching layer has built-in retries (e.g. TanStack Query), don't roll your own around it.
+7. **Catching to log then re-throw.** The boundary (TanStack Query / error boundary) handles it. The catch does nothing.
+8. **Adding retries.** Forbidden by CLAUDE.md P5. The caller decides. If your data-fetching layer has built-in retries (e.g. TanStack Query), don't roll your own around it.
 9. **Async functions returning `Promise<void>` and the caller not awaiting** — fire-and-forget. The error vanishes.
 10. **`async` keyword on a function that has no `await`.** Wraps the return value in a Promise needlessly. Drop the keyword.
 11. **Not propagating the `signal` from TanStack Query to the underlying fetch.** Cancellation never cascades; users navigate away but the request keeps running.
@@ -172,7 +180,7 @@ Browsers crash with an `unhandledrejection` event by default. **Don't add a glob
 
 ## Cross-references
 
-- `repo-conventions` § "Error handling" — specific surfaces this codebase uses (toast, error boundary, query error state).
+- `repo-conventions` § "Error handling" — the error surfaces this codebase uses (toast, error boundary, query error state).
 - `failure-mode-analysis` — `network` and `partial` categories enumerate failure modes this skill helps handle.
 - `react-data-fetching` — TanStack Query patterns and error-state UX.
-- `CLAUDE.md` — fail-fast, no retries, root-cause focus.
+- `CLAUDE.md` P5 — fail-fast, no retries, root-cause focus.

@@ -1,6 +1,10 @@
 ---
 name: decision-rules
-description: Use when interpreting an ambiguous user request, when scope is unclear, when a test fails but looks wrong, when CLAUDE.md and a skill seem to disagree, or whenever a default decision is needed under uncertainty. Provides the full decision table with rationale per row. NOT for unambiguous requests, code-quality questions (use design-review), or workflow procedures (use plan-mode / tdd-workflow).
+description: Use when interpreting an ambiguous user request, when scope is unclear, when choosing between two libraries, approaches, or options (the tie-breaker defaults and the tradeoff framing live here), when a test fails but looks wrong, when CLAUDE.md and a skill seem to disagree, when deciding whether to push back on a proposal, or whenever a default decision is needed under uncertainty in the app. Provides the full decision table with rationale per row. NOT for unambiguous requests, code-quality questions (use design-review), or workflow procedures (use plan-mode / tdd-workflow).
+harness:
+  tier: shared
+  family: process
+  gist: "Defaults under ambiguity; the canonical skill-vs-repo conflict table"
 ---
 
 # Decision Rules — Defaults Under Ambiguity
@@ -56,17 +60,21 @@ CLAUDE.md carries the highest-impact decisions as one-liners. This skill carries
 
 **Situation:** A skill says one thing, CLAUDE.md / `repo-conventions` says another.
 **Default:** **Follow the skill when it applies.** Skills are the team's curated best-practice catalog and are the default source for situational guidance.
-**Override — structural refactor:** If applying the skill would force a structural change to the repo — installing a new dependency, adding cross-cutting infrastructure the repo lacks (global error boundary, app-wide store, request-id middleware), modifying app-wide bootstrap, or refactoring established patterns in unrelated modules — **follow CLAUDE.md / `repo-conventions` for the current PR** and recommend the skill's pattern as a Future task in the response's Optional Improvements section.
+**Override — structural refactor:** If applying the skill would force a structural change to the repo — installing a new dependency, adding cross-cutting infrastructure the repo lacks (e.g. a global error boundary, an app-wide store, an app-wide logger swap, request-instrumentation middleware on the API client), modifying app-wide bootstrap, or refactoring established patterns in unrelated modules — **follow CLAUDE.md / `repo-conventions` for the current PR** and recommend the skill's pattern as a Future task in the response's Optional Improvements section.
 **Rationale:** Skills express the destination; CLAUDE.md sets the boundary conditions for what counts as in-scope for the current change. Smuggling structural refactors into unrelated work is itself a scope-discipline violation. Within CLAUDE.md, lower P-number wins.
 **Test for "structural":** would applying this best practice change code outside the current PR's scope? If yes → repo wins, recommend future task. If no → skill wins, apply now.
 
 **What is NOT structural** (best practice wins, no exception):
+
 - Following the test-query priority (role > label > placeholder > test-id) in NEW component tests.
 - Wrapping a multi-state effect in a custom hook for the current change.
 - Choosing the right server-state vs client-state placement for a NEW data flow.
 - Following the feature-folder layout for a NEW feature module.
+- Keeping server state in the query cache, never in `useState`, for a NEW data flow (per `react-state-management`).
+- Lazy-loading a NEW route at the route level via `React.lazy` (per `react-routing`).
+- Using semantic roles, accessible names, and label associations in NEW UI markup (per `accessibility`).
 
-**Cross-reference:** This rule is the skill-side mirror of CLAUDE.md P3.5. Both must read the same way; a contradiction here is a docs bug — flag it via `lessons-curator`.
+**Cross-reference:** This rule is the CANONICAL home of the skill-vs-repo conflict policy. CLAUDE.md P3.5 states only the two-line default+override and points here — it must not regrow its own copy of this table (that's a docs bug; flag it via `lessons-curator`).
 
 **ADR coupling:** When the structural Approach is eventually adopted (either deferred to a Future task and then implemented, or chosen explicitly in the current PR), the adoption MUST include writing an ADR in `docs/decisions/ADR-NNN-<title>.md`. The Future-task entry in Optional Improvements should name the ADR explicitly: `Future task — adopt <practice> per <skill> § <rule>; write ADR-NNN documenting the rationale.` See `documentation-and-adrs`.
 
@@ -84,12 +92,12 @@ CLAUDE.md carries the highest-impact decisions as one-liners. This skill carries
 **Rationale:** Ambiguous replies are common, but the cost of running an unauthorized destructive operation is asymmetric. Better to look pedantic than to run `DELETE` on a misread thumbs-up.
 **Override:** None. The protocol is non-negotiable.
 
-### 9. Confidence rubric scores below 0.90
+### 9. Verification line has open risks (or a reviewer set a floor)
 
-**Situation:** Computing the calibration rubric in `design-review`, the sum is 0.85.
-**Default:** Identify the weakest item, fix it, re-score. **NEVER round up.**
-**Rationale:** The Confidence number is what the user uses to decide whether to ship. Inflated confidence is worse than honest low confidence — it leads to surprises in production.
-**Override:** None. If the rubric won't lift to 0.90 with reasonable effort, declare with the actual score and name the gap.
+**Situation:** Composing the P8.1 verification line, something is missing — a suite that didn't run here, a triggered reviewer without a verdict, an unvalidated assumption — or a subagent returned GAPS/CHANGES-REQUESTED.
+**Default:** Fix the weakest item (run the suite, run the reviewer, validate the assumption) before declaring done. **NEVER omit a known gap from `open risks:`.**
+**Rationale:** The user ships on the strength of that line. A hidden gap is worse than an honestly declared one — it surfaces in production instead of in review.
+**Override:** None. If a gap can't be closed with reasonable effort, declare NOT done, or declare done-with-named-risk only when the user accepts the risk explicitly.
 
 ### 10. Multiple reasonable interpretations of the request
 
@@ -102,13 +110,13 @@ CLAUDE.md carries the highest-impact decisions as one-liners. This skill carries
 
 ### 11. Repo conventions vs requested approach
 
-**Situation:** User asks you to do X but X violates a `repo-conventions` rule (e.g., "store this token in a new place" when the project already has a documented token-storage approach, or "throw a generic `Error`" when the convention is to surface via a typed error / toast / error boundary).
+**Situation:** User asks you to do X but X violates a `repo-conventions` rule — e.g. "store this token in a new place" when the project already has a documented token-storage approach, or "throw a generic `Error`" when the convention is to surface via a typed error / toast / error boundary.
 **Default:** State the conflict. Ask: "<repo-conventions rule>; want me to deviate explicitly, or follow the convention?"
 **Rationale:** The user may have a reason; they may have forgotten; the question is cheap.
 
 ### 12. User asks for a quick fix on a sensitive surface
 
-**Situation:** "Just patch this auth bug, ship it." But the change touches the auth surface and would normally trigger `security-reviewer`.
+**Situation:** "Just patch this auth bug, ship it." But the change touches the auth surface (e.g. `auth/`) and would normally trigger `security-reviewer`.
 **Default:** Explain the verification gate exists. Offer two paths: (a) the right thing — security-review then ship, OR (b) the user explicitly accepts skipping the gate (they own the risk).
 **Rationale:** Auth/payments/sessions/RBAC/XSS-sink/token-storage have asymmetric risk. The user can override but should do so consciously.
 

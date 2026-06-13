@@ -1,6 +1,10 @@
 ---
 name: cyclomatic-complexity
 description: Use when writing or reviewing functions with multiple branches, nested conditionals, or growing if-else chains — to reduce cyclomatic complexity via early returns, guard clauses, and extract-method. NOT for inherently linear code, simple two-branch conditions, or framework-imposed structure (route handlers with one path, JSX render functions with one return).
+harness:
+  tier: shared
+  family: language
+  gist: "Flattening branch-heavy, nested functions"
 ---
 
 # Cyclomatic Complexity — Early Returns and Flat Functions
@@ -88,7 +92,7 @@ function ProjectAccessGate({ projectId, children }: Props) {
 }
 ```
 
-Cyclomatic complexity unchanged (still 5), but the happy path is unindented and each guard says "this *must* be true to proceed." This is the JSX-shaped equivalent of throwing early in a service function.
+Cyclomatic complexity is unchanged (still 5), but the happy path is unindented and each guard says "this *must* be true to proceed." The JSX form is the component-shaped equivalent of throwing early in a service function.
 
 ### Rule of thumb
 
@@ -140,6 +144,7 @@ function resolveRole(perms: Perms): Role {
   if (perms.isViewer) return 'viewer'
   return 'guest'
 }
+const role = resolveRole(perms)
 
 // ✅ Early returns in the component for state-shaped JSX
 function ProjectsList({ loading, error, data }: Props) {
@@ -156,7 +161,7 @@ function ProjectsList({ loading, error, data }: Props) {
 
 When a block within a function does one named thing — and the function's job is "orchestrate several named things" — extract the block. The receiving function becomes a list of well-named operations; each extracted method is independently testable.
 
-### Anti-pattern: god component orchestrating untyped steps
+### Anti-pattern: god component/method orchestrating untyped steps
 
 ```tsx
 // ❌ One big component. Each section is a "step" but they're not labeled.
@@ -179,7 +184,7 @@ function ProjectsPage() {
 }
 ```
 
-### Refactor: each step is a named hook/function
+### Refactor: each step is a named hook/method
 
 ```tsx
 // ✅ Top-level reads like a checklist; each hook has a single, testable purpose
@@ -216,7 +221,7 @@ async function findActiveProject(id: string): Promise<Project> { return fetchAct
 async function findProjectIncludingArchived(id: string): Promise<Project> { return fetchProjectIncludingArchived(id) }
 ```
 
-Exception: the boolean genuinely toggles a small detail (e.g., a debug flag) — leave it.
+Exception: the boolean genuinely toggles a small detail (e.g., a debug or logging flag) — leave it.
 
 ## Tactic 6: Replace conditional with polymorphism (use rarely)
 
@@ -234,14 +239,14 @@ switch (source.kind) {
 return await sourceRegistry.search(source, query)
 ```
 
-Don't introduce a new strategy registry just to break up a 3-arm switch unless the arms are growing.
+If a source registry already exists in the codebase, prefer it. Don't introduce a new strategy registry just to break up a 3-arm switch unless the arms are growing.
 
 ## Common LLM mistakes (catch these in `code-reviewer`)
 
 1. **Nested validation pyramid** — three+ levels of `if` checking preconditions before the work. → Use guard clauses with early throw.
 2. **`else` after `return`/`throw`** — vestigial branch. → Remove the `else`; flatten.
 3. **Nested ternaries** — already forbidden by `code-simplifier`. → Replace with `if` cascade or named function. In JSX, prefer early returns from the component.
-4. **God component orchestrating five unnamed sections** — each section is a named hook; extract.
+4. **God component/method orchestrating five unnamed sections** — each section is a named hook/step; extract.
 5. **Boolean flag changing the function's whole behavior** — split into two functions.
 6. **Switch over `.kind` repeated in multiple methods** — use a registry/strategy.
 7. **Single early-return for the unhappy path, then deeply nested happy path** — half-applied tactic. Apply early returns to all preconditions.
